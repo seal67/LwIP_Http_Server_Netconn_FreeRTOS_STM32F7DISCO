@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "ARM",
+            "defines": [
+                "STM32F746xx",
+                "USE_HAL_DRIVER",
+                "ARM_MATH_CM7"
+            ],
+            "compilerPath": "/usr/local/bin/arm-none-eabi-gcc",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/"
+                ],
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "${workspaceFolder}/../**"
+            ],
+            "cppStandard": "c++17",
+            "cStandard": "c99",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

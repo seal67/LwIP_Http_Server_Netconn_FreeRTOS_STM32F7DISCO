@@ -1,0 +1,1646 @@
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"inet_chksum.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.lwip_standard_chksum,"ax",%progbits
+  18              		.align	1
+  19              		.global	lwip_standard_chksum
+  20              		.arch armv7e-m
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  24              		.fpu fpv5-sp-d16
+  26              	lwip_standard_chksum:
+  27              	.LVL0:
+  28              	.LFB25:
+  29              		.file 1 "./Middlewares/LwIP/src/core/inet_chksum.c"
+   1:./Middlewares/LwIP/src/core/inet_chksum.c **** /**
+   2:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @file
+   3:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Internet checksum functions.\n
+   4:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+   5:./Middlewares/LwIP/src/core/inet_chksum.c ****  * These are some reference implementations of the checksum algorithm, with the
+   6:./Middlewares/LwIP/src/core/inet_chksum.c ****  * aim of being simple, correct and fully portable. Checksumming is the
+   7:./Middlewares/LwIP/src/core/inet_chksum.c ****  * first thing you would want to optimize for your platform. If you create
+   8:./Middlewares/LwIP/src/core/inet_chksum.c ****  * your own version, link it in and in your cc.h put:
+   9:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  10:./Middlewares/LwIP/src/core/inet_chksum.c ****  * \#define LWIP_CHKSUM your_checksum_routine
+  11:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  12:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Or you can select from the implementations below by defining
+  13:./Middlewares/LwIP/src/core/inet_chksum.c ****  * LWIP_CHKSUM_ALGORITHM to 1, 2 or 3.
+  14:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+  15:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+  16:./Middlewares/LwIP/src/core/inet_chksum.c **** /*
+  17:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+  18:./Middlewares/LwIP/src/core/inet_chksum.c ****  * All rights reserved.
+  19:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  20:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Redistribution and use in source and binary forms, with or without modification,
+  21:./Middlewares/LwIP/src/core/inet_chksum.c ****  * are permitted provided that the following conditions are met:
+  22:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  23:./Middlewares/LwIP/src/core/inet_chksum.c ****  * 1. Redistributions of source code must retain the above copyright notice,
+  24:./Middlewares/LwIP/src/core/inet_chksum.c ****  *    this list of conditions and the following disclaimer.
+  25:./Middlewares/LwIP/src/core/inet_chksum.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  26:./Middlewares/LwIP/src/core/inet_chksum.c ****  *    this list of conditions and the following disclaimer in the documentation
+  27:./Middlewares/LwIP/src/core/inet_chksum.c ****  *    and/or other materials provided with the distribution.
+  28:./Middlewares/LwIP/src/core/inet_chksum.c ****  * 3. The name of the author may not be used to endorse or promote products
+  29:./Middlewares/LwIP/src/core/inet_chksum.c ****  *    derived from this software without specific prior written permission.
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 2
+
+
+  30:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  31:./Middlewares/LwIP/src/core/inet_chksum.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+  32:./Middlewares/LwIP/src/core/inet_chksum.c ****  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  33:./Middlewares/LwIP/src/core/inet_chksum.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+  34:./Middlewares/LwIP/src/core/inet_chksum.c ****  * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  35:./Middlewares/LwIP/src/core/inet_chksum.c ****  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+  36:./Middlewares/LwIP/src/core/inet_chksum.c ****  * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  37:./Middlewares/LwIP/src/core/inet_chksum.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  38:./Middlewares/LwIP/src/core/inet_chksum.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+  39:./Middlewares/LwIP/src/core/inet_chksum.c ****  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+  40:./Middlewares/LwIP/src/core/inet_chksum.c ****  * OF SUCH DAMAGE.
+  41:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  42:./Middlewares/LwIP/src/core/inet_chksum.c ****  * This file is part of the lwIP TCP/IP stack.
+  43:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  44:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Author: Adam Dunkels <adam@sics.se>
+  45:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  46:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+  47:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+  48:./Middlewares/LwIP/src/core/inet_chksum.c **** #include "lwip/opt.h"
+  49:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+  50:./Middlewares/LwIP/src/core/inet_chksum.c **** #include "lwip/inet_chksum.h"
+  51:./Middlewares/LwIP/src/core/inet_chksum.c **** #include "lwip/def.h"
+  52:./Middlewares/LwIP/src/core/inet_chksum.c **** #include "lwip/ip_addr.h"
+  53:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+  54:./Middlewares/LwIP/src/core/inet_chksum.c **** #include <string.h>
+  55:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+  56:./Middlewares/LwIP/src/core/inet_chksum.c **** #ifndef LWIP_CHKSUM
+  57:./Middlewares/LwIP/src/core/inet_chksum.c **** # define LWIP_CHKSUM lwip_standard_chksum
+  58:./Middlewares/LwIP/src/core/inet_chksum.c **** # ifndef LWIP_CHKSUM_ALGORITHM
+  59:./Middlewares/LwIP/src/core/inet_chksum.c **** #  define LWIP_CHKSUM_ALGORITHM 2
+  60:./Middlewares/LwIP/src/core/inet_chksum.c **** # endif
+  61:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t lwip_standard_chksum(const void *dataptr, int len);
+  62:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif
+  63:./Middlewares/LwIP/src/core/inet_chksum.c **** /* If none set: */
+  64:./Middlewares/LwIP/src/core/inet_chksum.c **** #ifndef LWIP_CHKSUM_ALGORITHM
+  65:./Middlewares/LwIP/src/core/inet_chksum.c **** # define LWIP_CHKSUM_ALGORITHM 0
+  66:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif
+  67:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+  68:./Middlewares/LwIP/src/core/inet_chksum.c **** #if (LWIP_CHKSUM_ALGORITHM == 1) /* Version #1 */
+  69:./Middlewares/LwIP/src/core/inet_chksum.c **** /**
+  70:./Middlewares/LwIP/src/core/inet_chksum.c ****  * lwip checksum
+  71:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  72:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dataptr points to start of data to be summed at any boundary
+  73:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param len length of data to be summed
+  74:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return host order (!) lwip checksum (non-inverted Internet sum)
+  75:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+  76:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @note accumulator size limits summable length to 64k
+  77:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @note host endianess is irrelevant (p3 RFC1071)
+  78:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+  79:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+  80:./Middlewares/LwIP/src/core/inet_chksum.c **** lwip_standard_chksum(const void *dataptr, int len)
+  81:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+  82:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t acc;
+  83:./Middlewares/LwIP/src/core/inet_chksum.c ****   u16_t src;
+  84:./Middlewares/LwIP/src/core/inet_chksum.c ****   const u8_t *octetptr;
+  85:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+  86:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = 0;
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 3
+
+
+  87:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* dataptr may be at odd or even addresses */
+  88:./Middlewares/LwIP/src/core/inet_chksum.c ****   octetptr = (const u8_t *)dataptr;
+  89:./Middlewares/LwIP/src/core/inet_chksum.c ****   while (len > 1) {
+  90:./Middlewares/LwIP/src/core/inet_chksum.c ****     /* declare first octet as most significant
+  91:./Middlewares/LwIP/src/core/inet_chksum.c ****        thus assume network order, ignoring host order */
+  92:./Middlewares/LwIP/src/core/inet_chksum.c ****     src = (*octetptr) << 8;
+  93:./Middlewares/LwIP/src/core/inet_chksum.c ****     octetptr++;
+  94:./Middlewares/LwIP/src/core/inet_chksum.c ****     /* declare second octet as least significant */
+  95:./Middlewares/LwIP/src/core/inet_chksum.c ****     src |= (*octetptr);
+  96:./Middlewares/LwIP/src/core/inet_chksum.c ****     octetptr++;
+  97:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc += src;
+  98:./Middlewares/LwIP/src/core/inet_chksum.c ****     len -= 2;
+  99:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 100:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (len > 0) {
+ 101:./Middlewares/LwIP/src/core/inet_chksum.c ****     /* accumulate remaining octet */
+ 102:./Middlewares/LwIP/src/core/inet_chksum.c ****     src = (*octetptr) << 8;
+ 103:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc += src;
+ 104:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 105:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* add deferred carry bits */
+ 106:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (acc >> 16) + (acc & 0x0000ffffUL);
+ 107:./Middlewares/LwIP/src/core/inet_chksum.c ****   if ((acc & 0xffff0000UL) != 0) {
+ 108:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (acc >> 16) + (acc & 0x0000ffffUL);
+ 109:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 110:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* This maybe a little confusing: reorder sum using lwip_htons()
+ 111:./Middlewares/LwIP/src/core/inet_chksum.c ****      instead of lwip_ntohs() since it has a little less call overhead.
+ 112:./Middlewares/LwIP/src/core/inet_chksum.c ****      The caller must invert bits for Internet sum ! */
+ 113:./Middlewares/LwIP/src/core/inet_chksum.c ****   return lwip_htons((u16_t)acc);
+ 114:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 115:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif
+ 116:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 117:./Middlewares/LwIP/src/core/inet_chksum.c **** #if (LWIP_CHKSUM_ALGORITHM == 2) /* Alternative version #2 */
+ 118:./Middlewares/LwIP/src/core/inet_chksum.c **** /*
+ 119:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Curt McDowell
+ 120:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Broadcom Corp.
+ 121:./Middlewares/LwIP/src/core/inet_chksum.c ****  * csm@broadcom.com
+ 122:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 123:./Middlewares/LwIP/src/core/inet_chksum.c ****  * IP checksum two bytes at a time with support for
+ 124:./Middlewares/LwIP/src/core/inet_chksum.c ****  * unaligned buffer.
+ 125:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Works for len up to and including 0x20000.
+ 126:./Middlewares/LwIP/src/core/inet_chksum.c ****  * by Curt McDowell, Broadcom Corp. 12/08/2005
+ 127:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 128:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dataptr points to start of data to be summed at any boundary
+ 129:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param len length of data to be summed
+ 130:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return host order (!) lwip checksum (non-inverted Internet sum)
+ 131:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 132:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 133:./Middlewares/LwIP/src/core/inet_chksum.c **** lwip_standard_chksum(const void *dataptr, int len)
+ 134:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+  30              		.loc 1 134 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 8
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  35              		.loc 1 134 1 is_stmt 0 view .LVU1
+  36 0000 10B4     		push	{r4}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 4
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 4
+
+
+  39              		.cfi_offset 4, -4
+  40 0002 83B0     		sub	sp, sp, #12
+  41              	.LCFI1:
+  42              		.cfi_def_cfa_offset 16
+ 135:./Middlewares/LwIP/src/core/inet_chksum.c ****   const u8_t *pb = (const u8_t *)dataptr;
+  43              		.loc 1 135 3 is_stmt 1 view .LVU2
+  44              	.LVL1:
+ 136:./Middlewares/LwIP/src/core/inet_chksum.c ****   const u16_t *ps;
+  45              		.loc 1 136 3 view .LVU3
+ 137:./Middlewares/LwIP/src/core/inet_chksum.c ****   u16_t t = 0;
+  46              		.loc 1 137 3 view .LVU4
+  47              		.loc 1 137 9 is_stmt 0 view .LVU5
+  48 0004 0023     		movs	r3, #0
+  49 0006 ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 138:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t sum = 0;
+  50              		.loc 1 138 3 is_stmt 1 view .LVU6
+  51              	.LVL2:
+ 139:./Middlewares/LwIP/src/core/inet_chksum.c ****   int odd = ((mem_ptr_t)pb & 1);
+  52              		.loc 1 139 3 view .LVU7
+  53              		.loc 1 139 7 is_stmt 0 view .LVU8
+  54 000a 00F00104 		and	r4, r0, #1
+  55              	.LVL3:
+ 140:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 141:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Get aligned to u16_t */
+ 142:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (odd && len > 0) {
+  56              		.loc 1 142 3 is_stmt 1 view .LVU9
+  57              		.loc 1 142 18 is_stmt 0 view .LVU10
+  58 000e 0B46     		mov	r3, r1
+  59              		.loc 1 142 11 view .LVU11
+  60 0010 0029     		cmp	r1, #0
+  61 0012 D4BF     		ite	le
+  62 0014 0021     		movle	r1, #0
+  63 0016 00F00101 		andgt	r1, r0, #1
+  64              	.LVL4:
+  65              		.loc 1 142 6 view .LVU12
+  66 001a 21B1     		cbz	r1, .L2
+ 143:./Middlewares/LwIP/src/core/inet_chksum.c ****     ((u8_t *)&t)[1] = *pb++;
+  67              		.loc 1 143 5 is_stmt 1 view .LVU13
+  68              	.LVL5:
+  69              		.loc 1 143 23 is_stmt 0 view .LVU14
+  70 001c 10F8012B 		ldrb	r2, [r0], #1	@ zero_extendqisi2
+  71              	.LVL6:
+  72              		.loc 1 143 21 view .LVU15
+  73 0020 8DF80720 		strb	r2, [sp, #7]
+ 144:./Middlewares/LwIP/src/core/inet_chksum.c ****     len--;
+  74              		.loc 1 144 5 is_stmt 1 view .LVU16
+  75              		.loc 1 144 8 is_stmt 0 view .LVU17
+  76 0024 013B     		subs	r3, r3, #1
+  77              	.LVL7:
+  78              	.L2:
+ 145:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 146:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 147:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Add the bulk of the data */
+ 148:./Middlewares/LwIP/src/core/inet_chksum.c ****   ps = (const u16_t *)(const void *)pb;
+  79              		.loc 1 148 3 is_stmt 1 view .LVU18
+ 149:./Middlewares/LwIP/src/core/inet_chksum.c ****   while (len > 1) {
+  80              		.loc 1 149 3 view .LVU19
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 5
+
+
+ 138:./Middlewares/LwIP/src/core/inet_chksum.c ****   int odd = ((mem_ptr_t)pb & 1);
+  81              		.loc 1 138 9 is_stmt 0 view .LVU20
+  82 0026 0022     		movs	r2, #0
+  83              	.LVL8:
+  84              	.L3:
+  85              		.loc 1 149 9 is_stmt 1 view .LVU21
+  86 0028 012B     		cmp	r3, #1
+  87 002a 04DD     		ble	.L8
+ 150:./Middlewares/LwIP/src/core/inet_chksum.c ****     sum += *ps++;
+  88              		.loc 1 150 5 view .LVU22
+  89              	.LVL9:
+  90              		.loc 1 150 12 is_stmt 0 view .LVU23
+  91 002c 30F8021B 		ldrh	r1, [r0], #2
+  92              	.LVL10:
+  93              		.loc 1 150 9 view .LVU24
+  94 0030 0A44     		add	r2, r2, r1
+  95              	.LVL11:
+ 151:./Middlewares/LwIP/src/core/inet_chksum.c ****     len -= 2;
+  96              		.loc 1 151 5 is_stmt 1 view .LVU25
+  97              		.loc 1 151 9 is_stmt 0 view .LVU26
+  98 0032 023B     		subs	r3, r3, #2
+  99              	.LVL12:
+ 100              		.loc 1 151 9 view .LVU27
+ 101 0034 F8E7     		b	.L3
+ 102              	.L8:
+ 152:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 153:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 154:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Consume left-over byte, if any */
+ 155:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (len > 0) {
+ 103              		.loc 1 155 3 is_stmt 1 view .LVU28
+ 104              		.loc 1 155 6 is_stmt 0 view .LVU29
+ 105 0036 002B     		cmp	r3, #0
+ 106 0038 02DD     		ble	.L5
+ 156:./Middlewares/LwIP/src/core/inet_chksum.c ****     ((u8_t *)&t)[0] = *(const u8_t *)ps;
+ 107              		.loc 1 156 5 is_stmt 1 view .LVU30
+ 108              		.loc 1 156 23 is_stmt 0 view .LVU31
+ 109 003a 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 110              	.LVL13:
+ 111              		.loc 1 156 21 view .LVU32
+ 112 003c 8DF80630 		strb	r3, [sp, #6]
+ 113              	.L5:
+ 157:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 158:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 159:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Add end bytes */
+ 160:./Middlewares/LwIP/src/core/inet_chksum.c ****   sum += t;
+ 114              		.loc 1 160 3 is_stmt 1 view .LVU33
+ 115              		.loc 1 160 7 is_stmt 0 view .LVU34
+ 116 0040 BDF80600 		ldrh	r0, [sp, #6]
+ 117              	.LVL14:
+ 118              		.loc 1 160 7 view .LVU35
+ 119 0044 0244     		add	r2, r2, r0
+ 120              	.LVL15:
+ 161:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 162:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Fold 32-bit sum to 16 bits
+ 163:./Middlewares/LwIP/src/core/inet_chksum.c ****      calling this twice is probably faster than if statements... */
+ 164:./Middlewares/LwIP/src/core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 121              		.loc 1 164 3 is_stmt 1 view .LVU36
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 6
+
+
+ 122              		.loc 1 164 9 is_stmt 0 view .LVU37
+ 123 0046 90B2     		uxth	r0, r2
+ 124              		.loc 1 164 7 view .LVU38
+ 125 0048 00EB1242 		add	r2, r0, r2, lsr #16
+ 126              	.LVL16:
+ 165:./Middlewares/LwIP/src/core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 127              		.loc 1 165 3 is_stmt 1 view .LVU39
+ 128              		.loc 1 165 9 is_stmt 0 view .LVU40
+ 129 004c 90B2     		uxth	r0, r2
+ 130              		.loc 1 165 7 view .LVU41
+ 131 004e 00EB1240 		add	r0, r0, r2, lsr #16
+ 132              	.LVL17:
+ 166:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 167:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Swap if alignment was odd */
+ 168:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (odd) {
+ 133              		.loc 1 168 3 is_stmt 1 view .LVU42
+ 134              		.loc 1 168 6 is_stmt 0 view .LVU43
+ 135 0052 24B1     		cbz	r4, .L6
+ 169:./Middlewares/LwIP/src/core/inet_chksum.c ****     sum = SWAP_BYTES_IN_WORD(sum);
+ 136              		.loc 1 169 5 is_stmt 1 view .LVU44
+ 137              		.loc 1 169 11 is_stmt 0 view .LVU45
+ 138 0054 0302     		lsls	r3, r0, #8
+ 139 0056 9BB2     		uxth	r3, r3
+ 140 0058 C0F30720 		ubfx	r0, r0, #8, #8
+ 141              	.LVL18:
+ 142              		.loc 1 169 9 view .LVU46
+ 143 005c 1843     		orrs	r0, r0, r3
+ 144              	.LVL19:
+ 145              	.L6:
+ 170:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 171:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 172:./Middlewares/LwIP/src/core/inet_chksum.c ****   return (u16_t)sum;
+ 146              		.loc 1 172 3 is_stmt 1 view .LVU47
+ 173:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 147              		.loc 1 173 1 is_stmt 0 view .LVU48
+ 148 005e 80B2     		uxth	r0, r0
+ 149              	.LVL20:
+ 150              		.loc 1 173 1 view .LVU49
+ 151 0060 03B0     		add	sp, sp, #12
+ 152              	.LCFI2:
+ 153              		.cfi_def_cfa_offset 4
+ 154              		@ sp needed
+ 155 0062 5DF8044B 		ldr	r4, [sp], #4
+ 156              	.LCFI3:
+ 157              		.cfi_restore 4
+ 158              		.cfi_def_cfa_offset 0
+ 159              	.LVL21:
+ 160              		.loc 1 173 1 view .LVU50
+ 161 0066 7047     		bx	lr
+ 162              		.cfi_endproc
+ 163              	.LFE25:
+ 165              		.section	.text.inet_cksum_pseudo_base,"ax",%progbits
+ 166              		.align	1
+ 167              		.syntax unified
+ 168              		.thumb
+ 169              		.thumb_func
+ 170              		.fpu fpv5-sp-d16
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 7
+
+
+ 172              	inet_cksum_pseudo_base:
+ 173              	.LVL22:
+ 174              	.LFB26:
+ 174:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif
+ 175:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 176:./Middlewares/LwIP/src/core/inet_chksum.c **** #if (LWIP_CHKSUM_ALGORITHM == 3) /* Alternative version #3 */
+ 177:./Middlewares/LwIP/src/core/inet_chksum.c **** /**
+ 178:./Middlewares/LwIP/src/core/inet_chksum.c ****  * An optimized checksum routine. Basically, it uses loop-unrolling on
+ 179:./Middlewares/LwIP/src/core/inet_chksum.c ****  * the checksum loop, treating the head and tail bytes specially, whereas
+ 180:./Middlewares/LwIP/src/core/inet_chksum.c ****  * the inner loop acts on 8 bytes at a time.
+ 181:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 182:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @arg start of buffer to be checksummed. May be an odd byte address.
+ 183:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @len number of bytes in the buffer to be checksummed.
+ 184:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return host order (!) lwip checksum (non-inverted Internet sum)
+ 185:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 186:./Middlewares/LwIP/src/core/inet_chksum.c ****  * by Curt McDowell, Broadcom Corp. December 8th, 2005
+ 187:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 188:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 189:./Middlewares/LwIP/src/core/inet_chksum.c **** lwip_standard_chksum(const void *dataptr, int len)
+ 190:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 191:./Middlewares/LwIP/src/core/inet_chksum.c ****   const u8_t *pb = (const u8_t *)dataptr;
+ 192:./Middlewares/LwIP/src/core/inet_chksum.c ****   const u16_t *ps;
+ 193:./Middlewares/LwIP/src/core/inet_chksum.c ****   u16_t t = 0;
+ 194:./Middlewares/LwIP/src/core/inet_chksum.c ****   const u32_t *pl;
+ 195:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t sum = 0, tmp;
+ 196:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* starts at odd byte address? */
+ 197:./Middlewares/LwIP/src/core/inet_chksum.c ****   int odd = ((mem_ptr_t)pb & 1);
+ 198:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 199:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (odd && len > 0) {
+ 200:./Middlewares/LwIP/src/core/inet_chksum.c ****     ((u8_t *)&t)[1] = *pb++;
+ 201:./Middlewares/LwIP/src/core/inet_chksum.c ****     len--;
+ 202:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 203:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 204:./Middlewares/LwIP/src/core/inet_chksum.c ****   ps = (const u16_t *)(const void *)pb;
+ 205:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 206:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (((mem_ptr_t)ps & 3) && len > 1) {
+ 207:./Middlewares/LwIP/src/core/inet_chksum.c ****     sum += *ps++;
+ 208:./Middlewares/LwIP/src/core/inet_chksum.c ****     len -= 2;
+ 209:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 210:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 211:./Middlewares/LwIP/src/core/inet_chksum.c ****   pl = (const u32_t *)(const void *)ps;
+ 212:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 213:./Middlewares/LwIP/src/core/inet_chksum.c ****   while (len > 7)  {
+ 214:./Middlewares/LwIP/src/core/inet_chksum.c ****     tmp = sum + *pl++;          /* ping */
+ 215:./Middlewares/LwIP/src/core/inet_chksum.c ****     if (tmp < sum) {
+ 216:./Middlewares/LwIP/src/core/inet_chksum.c ****       tmp++;                    /* add back carry */
+ 217:./Middlewares/LwIP/src/core/inet_chksum.c ****     }
+ 218:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 219:./Middlewares/LwIP/src/core/inet_chksum.c ****     sum = tmp + *pl++;          /* pong */
+ 220:./Middlewares/LwIP/src/core/inet_chksum.c ****     if (sum < tmp) {
+ 221:./Middlewares/LwIP/src/core/inet_chksum.c ****       sum++;                    /* add back carry */
+ 222:./Middlewares/LwIP/src/core/inet_chksum.c ****     }
+ 223:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 224:./Middlewares/LwIP/src/core/inet_chksum.c ****     len -= 8;
+ 225:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 226:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 227:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* make room in upper bits */
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 8
+
+
+ 228:./Middlewares/LwIP/src/core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 229:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 230:./Middlewares/LwIP/src/core/inet_chksum.c ****   ps = (const u16_t *)pl;
+ 231:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 232:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* 16-bit aligned word remaining? */
+ 233:./Middlewares/LwIP/src/core/inet_chksum.c ****   while (len > 1) {
+ 234:./Middlewares/LwIP/src/core/inet_chksum.c ****     sum += *ps++;
+ 235:./Middlewares/LwIP/src/core/inet_chksum.c ****     len -= 2;
+ 236:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 237:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 238:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* dangling tail byte remaining? */
+ 239:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (len > 0) {                /* include odd byte */
+ 240:./Middlewares/LwIP/src/core/inet_chksum.c ****     ((u8_t *)&t)[0] = *(const u8_t *)ps;
+ 241:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 242:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 243:./Middlewares/LwIP/src/core/inet_chksum.c ****   sum += t;                     /* add end bytes */
+ 244:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 245:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Fold 32-bit sum to 16 bits
+ 246:./Middlewares/LwIP/src/core/inet_chksum.c ****      calling this twice is probably faster than if statements... */
+ 247:./Middlewares/LwIP/src/core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 248:./Middlewares/LwIP/src/core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 249:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 250:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (odd) {
+ 251:./Middlewares/LwIP/src/core/inet_chksum.c ****     sum = SWAP_BYTES_IN_WORD(sum);
+ 252:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 253:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 254:./Middlewares/LwIP/src/core/inet_chksum.c ****   return (u16_t)sum;
+ 255:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 256:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif
+ 257:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 258:./Middlewares/LwIP/src/core/inet_chksum.c **** /** Parts of the pseudo checksum which are common to IPv4 and IPv6 */
+ 259:./Middlewares/LwIP/src/core/inet_chksum.c **** static u16_t
+ 260:./Middlewares/LwIP/src/core/inet_chksum.c **** inet_cksum_pseudo_base(struct pbuf *p, u8_t proto, u16_t proto_len, u32_t acc)
+ 261:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 175              		.loc 1 261 1 is_stmt 1 view -0
+ 176              		.cfi_startproc
+ 177              		@ args = 0, pretend = 0, frame = 0
+ 178              		@ frame_needed = 0, uses_anonymous_args = 0
+ 179              		.loc 1 261 1 is_stmt 0 view .LVU52
+ 180 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 181              	.LCFI4:
+ 182              		.cfi_def_cfa_offset 32
+ 183              		.cfi_offset 3, -32
+ 184              		.cfi_offset 4, -28
+ 185              		.cfi_offset 5, -24
+ 186              		.cfi_offset 6, -20
+ 187              		.cfi_offset 7, -16
+ 188              		.cfi_offset 8, -12
+ 189              		.cfi_offset 9, -8
+ 190              		.cfi_offset 14, -4
+ 191 0004 0546     		mov	r5, r0
+ 192 0006 8946     		mov	r9, r1
+ 193 0008 9046     		mov	r8, r2
+ 194 000a 1C46     		mov	r4, r3
+ 262:./Middlewares/LwIP/src/core/inet_chksum.c ****   struct pbuf *q;
+ 195              		.loc 1 262 3 is_stmt 1 view .LVU53
+ 263:./Middlewares/LwIP/src/core/inet_chksum.c ****   int swapped = 0;
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 9
+
+
+ 196              		.loc 1 263 3 view .LVU54
+ 197              	.LVL23:
+ 264:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 265:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* iterate through all pbuf in chain */
+ 266:./Middlewares/LwIP/src/core/inet_chksum.c ****   for (q = p; q != NULL; q = q->next) {
+ 198              		.loc 1 266 3 view .LVU55
+ 263:./Middlewares/LwIP/src/core/inet_chksum.c ****   int swapped = 0;
+ 199              		.loc 1 263 7 is_stmt 0 view .LVU56
+ 200 000c 0027     		movs	r7, #0
+ 201              		.loc 1 266 3 view .LVU57
+ 202 000e 00E0     		b	.L10
+ 203              	.LVL24:
+ 204              	.L11:
+ 205              		.loc 1 266 26 is_stmt 1 discriminator 2 view .LVU58
+ 206              		.loc 1 266 28 is_stmt 0 discriminator 2 view .LVU59
+ 207 0010 2D68     		ldr	r5, [r5]
+ 208              	.LVL25:
+ 209              	.L10:
+ 210              		.loc 1 266 15 is_stmt 1 discriminator 1 view .LVU60
+ 211              		.loc 1 266 3 is_stmt 0 discriminator 1 view .LVU61
+ 212 0012 9DB1     		cbz	r5, .L15
+ 267:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 268:./Middlewares/LwIP/src/core/inet_chksum.c ****                              (void *)q, (void *)q->next));
+ 213              		.loc 1 268 58 is_stmt 1 view .LVU62
+ 269:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc += LWIP_CHKSUM(q->payload, q->len);
+ 214              		.loc 1 269 5 view .LVU63
+ 215              		.loc 1 269 12 is_stmt 0 view .LVU64
+ 216 0014 6989     		ldrh	r1, [r5, #10]
+ 217 0016 6868     		ldr	r0, [r5, #4]
+ 218 0018 FFF7FEFF 		bl	lwip_standard_chksum
+ 219              	.LVL26:
+ 220              		.loc 1 269 9 view .LVU65
+ 221 001c 0444     		add	r4, r4, r0
+ 222              	.LVL27:
+ 270:./Middlewares/LwIP/src/core/inet_chksum.c ****     /*LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): unwrapped lwip_chksum()=%"X32_F" \n", acc));*
+ 271:./Middlewares/LwIP/src/core/inet_chksum.c ****     /* just executing this next line is probably faster that the if statement needed
+ 272:./Middlewares/LwIP/src/core/inet_chksum.c ****        to check whether we really need to execute it, and does no harm */
+ 273:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = FOLD_U32T(acc);
+ 223              		.loc 1 273 5 is_stmt 1 view .LVU66
+ 224              		.loc 1 273 11 is_stmt 0 view .LVU67
+ 225 001e A3B2     		uxth	r3, r4
+ 226              		.loc 1 273 9 view .LVU68
+ 227 0020 03EB1444 		add	r4, r3, r4, lsr #16
+ 228              	.LVL28:
+ 274:./Middlewares/LwIP/src/core/inet_chksum.c ****     if (q->len % 2 != 0) {
+ 229              		.loc 1 274 5 is_stmt 1 view .LVU69
+ 230              		.loc 1 274 10 is_stmt 0 view .LVU70
+ 231 0024 6B89     		ldrh	r3, [r5, #10]
+ 232              		.loc 1 274 8 view .LVU71
+ 233 0026 13F0010F 		tst	r3, #1
+ 234 002a F1D0     		beq	.L11
+ 275:./Middlewares/LwIP/src/core/inet_chksum.c ****       swapped = !swapped;
+ 235              		.loc 1 275 7 is_stmt 1 view .LVU72
+ 236              		.loc 1 275 17 is_stmt 0 view .LVU73
+ 237 002c 87F00107 		eor	r7, r7, #1
+ 238              	.LVL29:
+ 276:./Middlewares/LwIP/src/core/inet_chksum.c ****       acc = SWAP_BYTES_IN_WORD(acc);
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 10
+
+
+ 239              		.loc 1 276 7 is_stmt 1 view .LVU74
+ 240              		.loc 1 276 13 is_stmt 0 view .LVU75
+ 241 0030 2602     		lsls	r6, r4, #8
+ 242 0032 B6B2     		uxth	r6, r6
+ 243 0034 C4F30724 		ubfx	r4, r4, #8, #8
+ 244              	.LVL30:
+ 245              		.loc 1 276 11 view .LVU76
+ 246 0038 3443     		orrs	r4, r4, r6
+ 247              	.LVL31:
+ 248              		.loc 1 276 11 view .LVU77
+ 249 003a E9E7     		b	.L11
+ 250              	.L15:
+ 277:./Middlewares/LwIP/src/core/inet_chksum.c ****     }
+ 278:./Middlewares/LwIP/src/core/inet_chksum.c ****     /*LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): wrapped lwip_chksum()=%"X32_F" \n", acc));*/
+ 279:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 280:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 281:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (swapped) {
+ 251              		.loc 1 281 3 is_stmt 1 view .LVU78
+ 252              		.loc 1 281 6 is_stmt 0 view .LVU79
+ 253 003c 27B1     		cbz	r7, .L13
+ 282:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = SWAP_BYTES_IN_WORD(acc);
+ 254              		.loc 1 282 5 is_stmt 1 view .LVU80
+ 255              		.loc 1 282 11 is_stmt 0 view .LVU81
+ 256 003e 2202     		lsls	r2, r4, #8
+ 257 0040 92B2     		uxth	r2, r2
+ 258 0042 C4F30724 		ubfx	r4, r4, #8, #8
+ 259              	.LVL32:
+ 260              		.loc 1 282 9 view .LVU82
+ 261 0046 1443     		orrs	r4, r4, r2
+ 262              	.LVL33:
+ 263              	.L13:
+ 283:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 284:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 285:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc += (u32_t)lwip_htons((u16_t)proto);
+ 264              		.loc 1 285 3 is_stmt 1 view .LVU83
+ 265              		.loc 1 285 17 is_stmt 0 view .LVU84
+ 266 0048 4846     		mov	r0, r9
+ 267 004a FFF7FEFF 		bl	lwip_htons
+ 268              	.LVL34:
+ 269              		.loc 1 285 7 view .LVU85
+ 270 004e 0444     		add	r4, r4, r0
+ 271              	.LVL35:
+ 286:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc += (u32_t)lwip_htons(proto_len);
+ 272              		.loc 1 286 3 is_stmt 1 view .LVU86
+ 273              		.loc 1 286 17 is_stmt 0 view .LVU87
+ 274 0050 4046     		mov	r0, r8
+ 275 0052 FFF7FEFF 		bl	lwip_htons
+ 276              	.LVL36:
+ 277              		.loc 1 286 7 view .LVU88
+ 278 0056 2044     		add	r0, r0, r4
+ 279              	.LVL37:
+ 287:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 288:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Fold 32-bit sum to 16 bits
+ 289:./Middlewares/LwIP/src/core/inet_chksum.c ****      calling this twice is probably faster than if statements... */
+ 290:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 280              		.loc 1 290 3 is_stmt 1 view .LVU89
+ 281              		.loc 1 290 9 is_stmt 0 view .LVU90
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 11
+
+
+ 282 0058 84B2     		uxth	r4, r0
+ 283              		.loc 1 290 7 view .LVU91
+ 284 005a 04EB1044 		add	r4, r4, r0, lsr #16
+ 285              	.LVL38:
+ 291:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 286              		.loc 1 291 3 is_stmt 1 view .LVU92
+ 287              		.loc 1 291 9 is_stmt 0 view .LVU93
+ 288 005e A0B2     		uxth	r0, r4
+ 289              		.loc 1 291 7 view .LVU94
+ 290 0060 00EB1440 		add	r0, r0, r4, lsr #16
+ 291              	.LVL39:
+ 292:./Middlewares/LwIP/src/core/inet_chksum.c ****   LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): pbuf chain lwip_chksum()=%"X32_F"\n", acc));
+ 292              		.loc 1 292 94 is_stmt 1 view .LVU95
+ 293:./Middlewares/LwIP/src/core/inet_chksum.c ****   return (u16_t)~(acc & 0xffffUL);
+ 293              		.loc 1 293 3 view .LVU96
+ 294              		.loc 1 293 10 is_stmt 0 view .LVU97
+ 295 0064 C043     		mvns	r0, r0
+ 296              	.LVL40:
+ 294:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 297              		.loc 1 294 1 view .LVU98
+ 298 0066 80B2     		uxth	r0, r0
+ 299              	.LVL41:
+ 300              		.loc 1 294 1 view .LVU99
+ 301 0068 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 302              		.loc 1 294 1 view .LVU100
+ 303              		.cfi_endproc
+ 304              	.LFE26:
+ 306              		.section	.rodata.inet_cksum_pseudo_partial_base.str1.4,"aMS",%progbits,1
+ 307              		.align	2
+ 308              	.LC0:
+ 309 0000 2E2F4D69 		.ascii	"./Middlewares/LwIP/src/core/inet_chksum.c\000"
+ 309      64646C65 
+ 309      77617265 
+ 309      732F4C77 
+ 309      49502F73 
+ 310 002a 0000     		.align	2
+ 311              	.LC1:
+ 312 002c 64656C65 		.ascii	"delete me\000"
+ 312      7465206D 
+ 312      6500
+ 313 0036 0000     		.align	2
+ 314              	.LC2:
+ 315 0038 41737365 		.ascii	"Assertion \"%s\" failed at line %d in %s\012\000"
+ 315      7274696F 
+ 315      6E202225 
+ 315      73222066 
+ 315      61696C65 
+ 316              		.section	.text.inet_cksum_pseudo_partial_base,"ax",%progbits
+ 317              		.align	1
+ 318              		.syntax unified
+ 319              		.thumb
+ 320              		.thumb_func
+ 321              		.fpu fpv5-sp-d16
+ 323              	inet_cksum_pseudo_partial_base:
+ 324              	.LVL42:
+ 325              	.LFB29:
+ 295:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 12
+
+
+ 296:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV4
+ 297:./Middlewares/LwIP/src/core/inet_chksum.c **** /* inet_chksum_pseudo:
+ 298:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 299:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Calculates the IPv4 pseudo Internet checksum used by TCP and UDP for a pbuf chain.
+ 300:./Middlewares/LwIP/src/core/inet_chksum.c ****  * IP addresses are expected to be in network byte order.
+ 301:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 302:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 303:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param src source ip address (used for checksum of pseudo header)
+ 304:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dst destination ip address (used for checksum of pseudo header)
+ 305:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto ip protocol (used for checksum of pseudo header)
+ 306:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto_len length of the ip data part (used for checksum of pseudo header)
+ 307:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 308:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 309:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 310:./Middlewares/LwIP/src/core/inet_chksum.c **** inet_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 311:./Middlewares/LwIP/src/core/inet_chksum.c ****                    const ip4_addr_t *src, const ip4_addr_t *dest)
+ 312:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 313:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t acc;
+ 314:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t addr;
+ 315:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 316:./Middlewares/LwIP/src/core/inet_chksum.c ****   addr = ip4_addr_get_u32(src);
+ 317:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (addr & 0xffffUL);
+ 318:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 319:./Middlewares/LwIP/src/core/inet_chksum.c ****   addr = ip4_addr_get_u32(dest);
+ 320:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + (addr & 0xffffUL));
+ 321:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 322:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* fold down to 16 bits */
+ 323:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 324:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 325:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 326:./Middlewares/LwIP/src/core/inet_chksum.c ****   return inet_cksum_pseudo_base(p, proto, proto_len, acc);
+ 327:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 328:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 329:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 330:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV6
+ 331:./Middlewares/LwIP/src/core/inet_chksum.c **** /**
+ 332:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Calculates the checksum with IPv6 pseudo header used by TCP and UDP for a pbuf chain.
+ 333:./Middlewares/LwIP/src/core/inet_chksum.c ****  * IPv6 addresses are expected to be in network byte order.
+ 334:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 335:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 336:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto ipv6 protocol/next header (used for checksum of pseudo header)
+ 337:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto_len length of the ipv6 payload (used for checksum of pseudo header)
+ 338:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param src source ipv6 address (used for checksum of pseudo header)
+ 339:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dest destination ipv6 address (used for checksum of pseudo header)
+ 340:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 341:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 342:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 343:./Middlewares/LwIP/src/core/inet_chksum.c **** ip6_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 344:./Middlewares/LwIP/src/core/inet_chksum.c ****                   const ip6_addr_t *src, const ip6_addr_t *dest)
+ 345:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 346:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t acc = 0;
+ 347:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t addr;
+ 348:./Middlewares/LwIP/src/core/inet_chksum.c ****   u8_t addr_part;
+ 349:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 350:./Middlewares/LwIP/src/core/inet_chksum.c ****   for (addr_part = 0; addr_part < 4; addr_part++) {
+ 351:./Middlewares/LwIP/src/core/inet_chksum.c ****     addr = src->addr[addr_part];
+ 352:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (u32_t)(acc + (addr & 0xffffUL));
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 13
+
+
+ 353:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 354:./Middlewares/LwIP/src/core/inet_chksum.c ****     addr = dest->addr[addr_part];
+ 355:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (u32_t)(acc + (addr & 0xffffUL));
+ 356:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 357:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 358:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* fold down to 16 bits */
+ 359:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 360:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 361:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 362:./Middlewares/LwIP/src/core/inet_chksum.c ****   return inet_cksum_pseudo_base(p, proto, proto_len, acc);
+ 363:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 364:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV6 */
+ 365:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 366:./Middlewares/LwIP/src/core/inet_chksum.c **** /* ip_chksum_pseudo:
+ 367:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 368:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Calculates the IPv4 or IPv6 pseudo Internet checksum used by TCP and UDP for a pbuf chain.
+ 369:./Middlewares/LwIP/src/core/inet_chksum.c ****  * IP addresses are expected to be in network byte order.
+ 370:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 371:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 372:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param src source ip address (used for checksum of pseudo header)
+ 373:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dst destination ip address (used for checksum of pseudo header)
+ 374:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto ip protocol (used for checksum of pseudo header)
+ 375:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto_len length of the ip data part (used for checksum of pseudo header)
+ 376:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 377:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 378:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 379:./Middlewares/LwIP/src/core/inet_chksum.c **** ip_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 380:./Middlewares/LwIP/src/core/inet_chksum.c ****                  const ip_addr_t *src, const ip_addr_t *dest)
+ 381:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 382:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV6
+ 383:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (IP_IS_V6(dest)) {
+ 384:./Middlewares/LwIP/src/core/inet_chksum.c ****     return ip6_chksum_pseudo(p, proto, proto_len, ip_2_ip6(src), ip_2_ip6(dest));
+ 385:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 386:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV6 */
+ 387:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV4 && LWIP_IPV6
+ 388:./Middlewares/LwIP/src/core/inet_chksum.c ****   else
+ 389:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV4 && LWIP_IPV6 */
+ 390:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV4
+ 391:./Middlewares/LwIP/src/core/inet_chksum.c ****   {
+ 392:./Middlewares/LwIP/src/core/inet_chksum.c ****     return inet_chksum_pseudo(p, proto, proto_len, ip_2_ip4(src), ip_2_ip4(dest));
+ 393:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 394:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 395:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 396:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 397:./Middlewares/LwIP/src/core/inet_chksum.c **** /** Parts of the pseudo checksum which are common to IPv4 and IPv6 */
+ 398:./Middlewares/LwIP/src/core/inet_chksum.c **** static u16_t
+ 399:./Middlewares/LwIP/src/core/inet_chksum.c **** inet_cksum_pseudo_partial_base(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 400:./Middlewares/LwIP/src/core/inet_chksum.c ****                                u16_t chksum_len, u32_t acc)
+ 401:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 326              		.loc 1 401 1 is_stmt 1 view -0
+ 327              		.cfi_startproc
+ 328              		@ args = 4, pretend = 0, frame = 0
+ 329              		@ frame_needed = 0, uses_anonymous_args = 0
+ 330              		.loc 1 401 1 is_stmt 0 view .LVU102
+ 331 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 332              	.LCFI5:
+ 333              		.cfi_def_cfa_offset 32
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 14
+
+
+ 334              		.cfi_offset 4, -32
+ 335              		.cfi_offset 5, -28
+ 336              		.cfi_offset 6, -24
+ 337              		.cfi_offset 7, -20
+ 338              		.cfi_offset 8, -16
+ 339              		.cfi_offset 9, -12
+ 340              		.cfi_offset 10, -8
+ 341              		.cfi_offset 14, -4
+ 342 0004 0646     		mov	r6, r0
+ 343 0006 8946     		mov	r9, r1
+ 344 0008 9046     		mov	r8, r2
+ 345 000a 9A46     		mov	r10, r3
+ 346 000c 089C     		ldr	r4, [sp, #32]
+ 402:./Middlewares/LwIP/src/core/inet_chksum.c ****   struct pbuf *q;
+ 347              		.loc 1 402 3 is_stmt 1 view .LVU103
+ 403:./Middlewares/LwIP/src/core/inet_chksum.c ****   int swapped = 0;
+ 348              		.loc 1 403 3 view .LVU104
+ 349              	.LVL43:
+ 404:./Middlewares/LwIP/src/core/inet_chksum.c ****   u16_t chklen;
+ 350              		.loc 1 404 3 view .LVU105
+ 405:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 406:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* iterate through all pbuf in chain */
+ 407:./Middlewares/LwIP/src/core/inet_chksum.c ****   for (q = p; (q != NULL) && (chksum_len > 0); q = q->next) {
+ 351              		.loc 1 407 3 view .LVU106
+ 403:./Middlewares/LwIP/src/core/inet_chksum.c ****   u16_t chklen;
+ 352              		.loc 1 403 7 is_stmt 0 view .LVU107
+ 353 000e 0027     		movs	r7, #0
+ 354              		.loc 1 407 3 view .LVU108
+ 355 0010 08E0     		b	.L17
+ 356              	.LVL44:
+ 357              	.L26:
+ 408:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 409:./Middlewares/LwIP/src/core/inet_chksum.c ****                              (void *)q, (void *)q->next));
+ 410:./Middlewares/LwIP/src/core/inet_chksum.c ****     chklen = q->len;
+ 411:./Middlewares/LwIP/src/core/inet_chksum.c ****     if (chklen > chksum_len) {
+ 412:./Middlewares/LwIP/src/core/inet_chksum.c ****       chklen = chksum_len;
+ 413:./Middlewares/LwIP/src/core/inet_chksum.c ****     }
+ 414:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc += LWIP_CHKSUM(q->payload, chklen);
+ 415:./Middlewares/LwIP/src/core/inet_chksum.c ****     chksum_len = (u16_t)(chksum_len - chklen);
+ 416:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_ASSERT("delete me", chksum_len < 0x7fff);
+ 358              		.loc 1 416 5 is_stmt 1 discriminator 1 view .LVU109
+ 359              		.loc 1 416 5 discriminator 1 view .LVU110
+ 360 0012 244B     		ldr	r3, .L27
+ 361 0014 4FF4D072 		mov	r2, #416
+ 362 0018 2349     		ldr	r1, .L27+4
+ 363 001a 2448     		ldr	r0, .L27+8
+ 364 001c FFF7FEFF 		bl	printf
+ 365              	.LVL45:
+ 366 0020 19E0     		b	.L19
+ 367              	.L20:
+ 407:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 368              		.loc 1 407 48 discriminator 2 view .LVU111
+ 407:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 369              		.loc 1 407 50 is_stmt 0 discriminator 2 view .LVU112
+ 370 0022 3668     		ldr	r6, [r6]
+ 371              	.LVL46:
+ 372              	.L17:
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 15
+
+
+ 407:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 373              		.loc 1 407 15 is_stmt 1 discriminator 1 view .LVU113
+ 407:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 374              		.loc 1 407 42 is_stmt 0 discriminator 1 view .LVU114
+ 375 0024 BAF10003 		subs	r3, r10, #0
+ 376 0028 18BF     		it	ne
+ 377 002a 0123     		movne	r3, #1
+ 407:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 378              		.loc 1 407 27 discriminator 1 view .LVU115
+ 379 002c 002E     		cmp	r6, #0
+ 380 002e 08BF     		it	eq
+ 381 0030 0023     		moveq	r3, #0
+ 407:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 382              		.loc 1 407 3 discriminator 1 view .LVU116
+ 383 0032 FBB1     		cbz	r3, .L25
+ 409:./Middlewares/LwIP/src/core/inet_chksum.c ****     chklen = q->len;
+ 384              		.loc 1 409 58 is_stmt 1 view .LVU117
+ 410:./Middlewares/LwIP/src/core/inet_chksum.c ****     if (chklen > chksum_len) {
+ 385              		.loc 1 410 5 view .LVU118
+ 410:./Middlewares/LwIP/src/core/inet_chksum.c ****     if (chklen > chksum_len) {
+ 386              		.loc 1 410 12 is_stmt 0 view .LVU119
+ 387 0034 7589     		ldrh	r5, [r6, #10]
+ 388              	.LVL47:
+ 411:./Middlewares/LwIP/src/core/inet_chksum.c ****       chklen = chksum_len;
+ 389              		.loc 1 411 5 is_stmt 1 view .LVU120
+ 411:./Middlewares/LwIP/src/core/inet_chksum.c ****       chklen = chksum_len;
+ 390              		.loc 1 411 8 is_stmt 0 view .LVU121
+ 391 0036 AA45     		cmp	r10, r5
+ 392 0038 00D2     		bcs	.L18
+ 412:./Middlewares/LwIP/src/core/inet_chksum.c ****     }
+ 393              		.loc 1 412 14 view .LVU122
+ 394 003a 5546     		mov	r5, r10
+ 395              	.LVL48:
+ 396              	.L18:
+ 414:./Middlewares/LwIP/src/core/inet_chksum.c ****     chksum_len = (u16_t)(chksum_len - chklen);
+ 397              		.loc 1 414 5 is_stmt 1 view .LVU123
+ 414:./Middlewares/LwIP/src/core/inet_chksum.c ****     chksum_len = (u16_t)(chksum_len - chklen);
+ 398              		.loc 1 414 12 is_stmt 0 view .LVU124
+ 399 003c 2946     		mov	r1, r5
+ 400 003e 7068     		ldr	r0, [r6, #4]
+ 401 0040 FFF7FEFF 		bl	lwip_standard_chksum
+ 402              	.LVL49:
+ 414:./Middlewares/LwIP/src/core/inet_chksum.c ****     chksum_len = (u16_t)(chksum_len - chklen);
+ 403              		.loc 1 414 9 view .LVU125
+ 404 0044 0444     		add	r4, r4, r0
+ 405              	.LVL50:
+ 415:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_ASSERT("delete me", chksum_len < 0x7fff);
+ 406              		.loc 1 415 5 is_stmt 1 view .LVU126
+ 415:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_ASSERT("delete me", chksum_len < 0x7fff);
+ 407              		.loc 1 415 16 is_stmt 0 view .LVU127
+ 408 0046 AAEB0505 		sub	r5, r10, r5
+ 409              	.LVL51:
+ 415:./Middlewares/LwIP/src/core/inet_chksum.c ****     LWIP_ASSERT("delete me", chksum_len < 0x7fff);
+ 410              		.loc 1 415 16 view .LVU128
+ 411 004a 1FFA85FA 		uxth	r10, r5
+ 412              	.LVL52:
+ 413              		.loc 1 416 5 is_stmt 1 view .LVU129
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 16
+
+
+ 414              		.loc 1 416 5 view .LVU130
+ 415 004e 47F6FE73 		movw	r3, #32766
+ 416 0052 9A45     		cmp	r10, r3
+ 417 0054 DDD8     		bhi	.L26
+ 418              	.L19:
+ 419              		.loc 1 416 5 discriminator 3 view .LVU131
+ 420              		.loc 1 416 5 discriminator 3 view .LVU132
+ 417:./Middlewares/LwIP/src/core/inet_chksum.c ****     /*LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): unwrapped lwip_chksum()=%"X32_F" \n", acc));*
+ 418:./Middlewares/LwIP/src/core/inet_chksum.c ****     /* fold the upper bit down */
+ 419:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = FOLD_U32T(acc);
+ 421              		.loc 1 419 5 discriminator 3 view .LVU133
+ 422              		.loc 1 419 11 is_stmt 0 discriminator 3 view .LVU134
+ 423 0056 A0B2     		uxth	r0, r4
+ 424              		.loc 1 419 9 discriminator 3 view .LVU135
+ 425 0058 00EB1444 		add	r4, r0, r4, lsr #16
+ 426              	.LVL53:
+ 420:./Middlewares/LwIP/src/core/inet_chksum.c ****     if (q->len % 2 != 0) {
+ 427              		.loc 1 420 5 is_stmt 1 discriminator 3 view .LVU136
+ 428              		.loc 1 420 10 is_stmt 0 discriminator 3 view .LVU137
+ 429 005c 7389     		ldrh	r3, [r6, #10]
+ 430              		.loc 1 420 8 discriminator 3 view .LVU138
+ 431 005e 13F0010F 		tst	r3, #1
+ 432 0062 DED0     		beq	.L20
+ 421:./Middlewares/LwIP/src/core/inet_chksum.c ****       swapped = !swapped;
+ 433              		.loc 1 421 7 is_stmt 1 view .LVU139
+ 434              		.loc 1 421 17 is_stmt 0 view .LVU140
+ 435 0064 87F00107 		eor	r7, r7, #1
+ 436              	.LVL54:
+ 422:./Middlewares/LwIP/src/core/inet_chksum.c ****       acc = SWAP_BYTES_IN_WORD(acc);
+ 437              		.loc 1 422 7 is_stmt 1 view .LVU141
+ 438              		.loc 1 422 13 is_stmt 0 view .LVU142
+ 439 0068 2302     		lsls	r3, r4, #8
+ 440 006a 9BB2     		uxth	r3, r3
+ 441 006c C4F30724 		ubfx	r4, r4, #8, #8
+ 442              	.LVL55:
+ 443              		.loc 1 422 11 view .LVU143
+ 444 0070 1C43     		orrs	r4, r4, r3
+ 445              	.LVL56:
+ 446              		.loc 1 422 11 view .LVU144
+ 447 0072 D6E7     		b	.L20
+ 448              	.L25:
+ 423:./Middlewares/LwIP/src/core/inet_chksum.c ****     }
+ 424:./Middlewares/LwIP/src/core/inet_chksum.c ****     /*LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): wrapped lwip_chksum()=%"X32_F" \n", acc));*/
+ 425:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 426:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 427:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (swapped) {
+ 449              		.loc 1 427 3 is_stmt 1 view .LVU145
+ 450              		.loc 1 427 6 is_stmt 0 view .LVU146
+ 451 0074 27B1     		cbz	r7, .L22
+ 428:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = SWAP_BYTES_IN_WORD(acc);
+ 452              		.loc 1 428 5 is_stmt 1 view .LVU147
+ 453              		.loc 1 428 11 is_stmt 0 view .LVU148
+ 454 0076 2302     		lsls	r3, r4, #8
+ 455 0078 9BB2     		uxth	r3, r3
+ 456 007a C4F30724 		ubfx	r4, r4, #8, #8
+ 457              	.LVL57:
+ 458              		.loc 1 428 9 view .LVU149
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 17
+
+
+ 459 007e 1C43     		orrs	r4, r4, r3
+ 460              	.LVL58:
+ 461              	.L22:
+ 429:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 430:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 431:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc += (u32_t)lwip_htons((u16_t)proto);
+ 462              		.loc 1 431 3 is_stmt 1 view .LVU150
+ 463              		.loc 1 431 17 is_stmt 0 view .LVU151
+ 464 0080 4846     		mov	r0, r9
+ 465 0082 FFF7FEFF 		bl	lwip_htons
+ 466              	.LVL59:
+ 467              		.loc 1 431 7 view .LVU152
+ 468 0086 0444     		add	r4, r4, r0
+ 469              	.LVL60:
+ 432:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc += (u32_t)lwip_htons(proto_len);
+ 470              		.loc 1 432 3 is_stmt 1 view .LVU153
+ 471              		.loc 1 432 17 is_stmt 0 view .LVU154
+ 472 0088 4046     		mov	r0, r8
+ 473 008a FFF7FEFF 		bl	lwip_htons
+ 474              	.LVL61:
+ 475              		.loc 1 432 7 view .LVU155
+ 476 008e 2044     		add	r0, r0, r4
+ 477              	.LVL62:
+ 433:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 434:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* Fold 32-bit sum to 16 bits
+ 435:./Middlewares/LwIP/src/core/inet_chksum.c ****      calling this twice is probably faster than if statements... */
+ 436:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 478              		.loc 1 436 3 is_stmt 1 view .LVU156
+ 479              		.loc 1 436 9 is_stmt 0 view .LVU157
+ 480 0090 84B2     		uxth	r4, r0
+ 481              		.loc 1 436 7 view .LVU158
+ 482 0092 04EB1044 		add	r4, r4, r0, lsr #16
+ 483              	.LVL63:
+ 437:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 484              		.loc 1 437 3 is_stmt 1 view .LVU159
+ 485              		.loc 1 437 9 is_stmt 0 view .LVU160
+ 486 0096 A0B2     		uxth	r0, r4
+ 487              		.loc 1 437 7 view .LVU161
+ 488 0098 00EB1440 		add	r0, r0, r4, lsr #16
+ 489              	.LVL64:
+ 438:./Middlewares/LwIP/src/core/inet_chksum.c ****   LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): pbuf chain lwip_chksum()=%"X32_F"\n", acc));
+ 490              		.loc 1 438 94 is_stmt 1 view .LVU162
+ 439:./Middlewares/LwIP/src/core/inet_chksum.c ****   return (u16_t)~(acc & 0xffffUL);
+ 491              		.loc 1 439 3 view .LVU163
+ 492              		.loc 1 439 10 is_stmt 0 view .LVU164
+ 493 009c C043     		mvns	r0, r0
+ 494              	.LVL65:
+ 440:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 495              		.loc 1 440 1 view .LVU165
+ 496 009e 80B2     		uxth	r0, r0
+ 497              	.LVL66:
+ 498              		.loc 1 440 1 view .LVU166
+ 499 00a0 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 500              	.LVL67:
+ 501              	.L28:
+ 502              		.loc 1 440 1 view .LVU167
+ 503              		.align	2
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 18
+
+
+ 504              	.L27:
+ 505 00a4 00000000 		.word	.LC0
+ 506 00a8 2C000000 		.word	.LC1
+ 507 00ac 38000000 		.word	.LC2
+ 508              		.cfi_endproc
+ 509              	.LFE29:
+ 511              		.section	.text.inet_chksum_pseudo,"ax",%progbits
+ 512              		.align	1
+ 513              		.global	inet_chksum_pseudo
+ 514              		.syntax unified
+ 515              		.thumb
+ 516              		.thumb_func
+ 517              		.fpu fpv5-sp-d16
+ 519              	inet_chksum_pseudo:
+ 520              	.LVL68:
+ 521              	.LFB27:
+ 312:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t acc;
+ 522              		.loc 1 312 1 is_stmt 1 view -0
+ 523              		.cfi_startproc
+ 524              		@ args = 4, pretend = 0, frame = 0
+ 525              		@ frame_needed = 0, uses_anonymous_args = 0
+ 312:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t acc;
+ 526              		.loc 1 312 1 is_stmt 0 view .LVU169
+ 527 0000 10B5     		push	{r4, lr}
+ 528              	.LCFI6:
+ 529              		.cfi_def_cfa_offset 8
+ 530              		.cfi_offset 4, -8
+ 531              		.cfi_offset 14, -4
+ 313:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t addr;
+ 532              		.loc 1 313 3 is_stmt 1 view .LVU170
+ 314:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 533              		.loc 1 314 3 view .LVU171
+ 316:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (addr & 0xffffUL);
+ 534              		.loc 1 316 3 view .LVU172
+ 316:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (addr & 0xffffUL);
+ 535              		.loc 1 316 8 is_stmt 0 view .LVU173
+ 536 0002 1B68     		ldr	r3, [r3]
+ 537              	.LVL69:
+ 317:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 538              		.loc 1 317 3 is_stmt 1 view .LVU174
+ 318:./Middlewares/LwIP/src/core/inet_chksum.c ****   addr = ip4_addr_get_u32(dest);
+ 539              		.loc 1 318 3 view .LVU175
+ 318:./Middlewares/LwIP/src/core/inet_chksum.c ****   addr = ip4_addr_get_u32(dest);
+ 540              		.loc 1 318 30 is_stmt 0 view .LVU176
+ 541 0004 1C0C     		lsrs	r4, r3, #16
+ 318:./Middlewares/LwIP/src/core/inet_chksum.c ****   addr = ip4_addr_get_u32(dest);
+ 542              		.loc 1 318 7 view .LVU177
+ 543 0006 14FA83F3 		uxtah	r3, r4, r3
+ 544              	.LVL70:
+ 319:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + (addr & 0xffffUL));
+ 545              		.loc 1 319 3 is_stmt 1 view .LVU178
+ 319:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + (addr & 0xffffUL));
+ 546              		.loc 1 319 8 is_stmt 0 view .LVU179
+ 547 000a 029C     		ldr	r4, [sp, #8]
+ 548 000c 2468     		ldr	r4, [r4]
+ 549              	.LVL71:
+ 320:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 19
+
+
+ 550              		.loc 1 320 3 is_stmt 1 view .LVU180
+ 320:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 551              		.loc 1 320 7 is_stmt 0 view .LVU181
+ 552 000e 13FA84F3 		uxtah	r3, r3, r4
+ 553              	.LVL72:
+ 321:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* fold down to 16 bits */
+ 554              		.loc 1 321 3 is_stmt 1 view .LVU182
+ 321:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* fold down to 16 bits */
+ 555              		.loc 1 321 7 is_stmt 0 view .LVU183
+ 556 0012 03EB1443 		add	r3, r3, r4, lsr #16
+ 557              	.LVL73:
+ 323:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 558              		.loc 1 323 3 is_stmt 1 view .LVU184
+ 323:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 559              		.loc 1 323 9 is_stmt 0 view .LVU185
+ 560 0016 9CB2     		uxth	r4, r3
+ 561              	.LVL74:
+ 323:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 562              		.loc 1 323 7 view .LVU186
+ 563 0018 04EB1343 		add	r3, r4, r3, lsr #16
+ 564              	.LVL75:
+ 324:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 565              		.loc 1 324 3 is_stmt 1 view .LVU187
+ 324:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 566              		.loc 1 324 9 is_stmt 0 view .LVU188
+ 567 001c 9CB2     		uxth	r4, r3
+ 568              	.LVL76:
+ 326:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 569              		.loc 1 326 3 is_stmt 1 view .LVU189
+ 326:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 570              		.loc 1 326 10 is_stmt 0 view .LVU190
+ 571 001e 04EB1343 		add	r3, r4, r3, lsr #16
+ 572              	.LVL77:
+ 326:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 573              		.loc 1 326 10 view .LVU191
+ 574 0022 FFF7FEFF 		bl	inet_cksum_pseudo_base
+ 575              	.LVL78:
+ 327:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 576              		.loc 1 327 1 view .LVU192
+ 577 0026 10BD     		pop	{r4, pc}
+ 327:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 578              		.loc 1 327 1 view .LVU193
+ 579              		.cfi_endproc
+ 580              	.LFE27:
+ 582              		.section	.text.ip_chksum_pseudo,"ax",%progbits
+ 583              		.align	1
+ 584              		.global	ip_chksum_pseudo
+ 585              		.syntax unified
+ 586              		.thumb
+ 587              		.thumb_func
+ 588              		.fpu fpv5-sp-d16
+ 590              	ip_chksum_pseudo:
+ 591              	.LVL79:
+ 592              	.LFB28:
+ 381:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV6
+ 593              		.loc 1 381 1 is_stmt 1 view -0
+ 594              		.cfi_startproc
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 20
+
+
+ 595              		@ args = 4, pretend = 0, frame = 0
+ 596              		@ frame_needed = 0, uses_anonymous_args = 0
+ 381:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV6
+ 597              		.loc 1 381 1 is_stmt 0 view .LVU195
+ 598 0000 10B5     		push	{r4, lr}
+ 599              	.LCFI7:
+ 600              		.cfi_def_cfa_offset 8
+ 601              		.cfi_offset 4, -8
+ 602              		.cfi_offset 14, -4
+ 603 0002 82B0     		sub	sp, sp, #8
+ 604              	.LCFI8:
+ 605              		.cfi_def_cfa_offset 16
+ 392:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 606              		.loc 1 392 5 is_stmt 1 view .LVU196
+ 392:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 607              		.loc 1 392 12 is_stmt 0 view .LVU197
+ 608 0004 049C     		ldr	r4, [sp, #16]
+ 609 0006 0094     		str	r4, [sp]
+ 610 0008 FFF7FEFF 		bl	inet_chksum_pseudo
+ 611              	.LVL80:
+ 395:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 612              		.loc 1 395 1 view .LVU198
+ 613 000c 02B0     		add	sp, sp, #8
+ 614              	.LCFI9:
+ 615              		.cfi_def_cfa_offset 8
+ 616              		@ sp needed
+ 617 000e 10BD     		pop	{r4, pc}
+ 395:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 618              		.loc 1 395 1 view .LVU199
+ 619              		.cfi_endproc
+ 620              	.LFE28:
+ 622              		.section	.text.inet_chksum_pseudo_partial,"ax",%progbits
+ 623              		.align	1
+ 624              		.global	inet_chksum_pseudo_partial
+ 625              		.syntax unified
+ 626              		.thumb
+ 627              		.thumb_func
+ 628              		.fpu fpv5-sp-d16
+ 630              	inet_chksum_pseudo_partial:
+ 631              	.LVL81:
+ 632              	.LFB30:
+ 441:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 442:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV4
+ 443:./Middlewares/LwIP/src/core/inet_chksum.c **** /* inet_chksum_pseudo_partial:
+ 444:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 445:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Calculates the IPv4 pseudo Internet checksum used by TCP and UDP for a pbuf chain.
+ 446:./Middlewares/LwIP/src/core/inet_chksum.c ****  * IP addresses are expected to be in network byte order.
+ 447:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 448:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 449:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param src source ip address (used for checksum of pseudo header)
+ 450:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dst destination ip address (used for checksum of pseudo header)
+ 451:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto ip protocol (used for checksum of pseudo header)
+ 452:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto_len length of the ip data part (used for checksum of pseudo header)
+ 453:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 454:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 455:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 456:./Middlewares/LwIP/src/core/inet_chksum.c **** inet_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 21
+
+
+ 457:./Middlewares/LwIP/src/core/inet_chksum.c ****                            u16_t chksum_len, const ip4_addr_t *src, const ip4_addr_t *dest)
+ 458:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 633              		.loc 1 458 1 is_stmt 1 view -0
+ 634              		.cfi_startproc
+ 635              		@ args = 8, pretend = 0, frame = 0
+ 636              		@ frame_needed = 0, uses_anonymous_args = 0
+ 637              		.loc 1 458 1 is_stmt 0 view .LVU201
+ 638 0000 30B5     		push	{r4, r5, lr}
+ 639              	.LCFI10:
+ 640              		.cfi_def_cfa_offset 12
+ 641              		.cfi_offset 4, -12
+ 642              		.cfi_offset 5, -8
+ 643              		.cfi_offset 14, -4
+ 644 0002 83B0     		sub	sp, sp, #12
+ 645              	.LCFI11:
+ 646              		.cfi_def_cfa_offset 24
+ 459:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t acc;
+ 647              		.loc 1 459 3 is_stmt 1 view .LVU202
+ 460:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t addr;
+ 648              		.loc 1 460 3 view .LVU203
+ 461:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 462:./Middlewares/LwIP/src/core/inet_chksum.c ****   addr = ip4_addr_get_u32(src);
+ 649              		.loc 1 462 3 view .LVU204
+ 650              		.loc 1 462 8 is_stmt 0 view .LVU205
+ 651 0004 069C     		ldr	r4, [sp, #24]
+ 652 0006 2468     		ldr	r4, [r4]
+ 653              	.LVL82:
+ 463:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (addr & 0xffffUL);
+ 654              		.loc 1 463 3 is_stmt 1 view .LVU206
+ 464:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 655              		.loc 1 464 3 view .LVU207
+ 656              		.loc 1 464 30 is_stmt 0 view .LVU208
+ 657 0008 250C     		lsrs	r5, r4, #16
+ 658              		.loc 1 464 7 view .LVU209
+ 659 000a 15FA84F4 		uxtah	r4, r5, r4
+ 660              	.LVL83:
+ 465:./Middlewares/LwIP/src/core/inet_chksum.c ****   addr = ip4_addr_get_u32(dest);
+ 661              		.loc 1 465 3 is_stmt 1 view .LVU210
+ 662              		.loc 1 465 8 is_stmt 0 view .LVU211
+ 663 000e 079D     		ldr	r5, [sp, #28]
+ 664 0010 2D68     		ldr	r5, [r5]
+ 665              	.LVL84:
+ 466:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + (addr & 0xffffUL));
+ 666              		.loc 1 466 3 is_stmt 1 view .LVU212
+ 667              		.loc 1 466 7 is_stmt 0 view .LVU213
+ 668 0012 14FA85F4 		uxtah	r4, r4, r5
+ 669              	.LVL85:
+ 467:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 670              		.loc 1 467 3 is_stmt 1 view .LVU214
+ 671              		.loc 1 467 7 is_stmt 0 view .LVU215
+ 672 0016 04EB1544 		add	r4, r4, r5, lsr #16
+ 673              	.LVL86:
+ 468:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* fold down to 16 bits */
+ 469:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 674              		.loc 1 469 3 is_stmt 1 view .LVU216
+ 675              		.loc 1 469 9 is_stmt 0 view .LVU217
+ 676 001a A5B2     		uxth	r5, r4
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 22
+
+
+ 677              	.LVL87:
+ 678              		.loc 1 469 7 view .LVU218
+ 679 001c 05EB1444 		add	r4, r5, r4, lsr #16
+ 680              	.LVL88:
+ 470:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 681              		.loc 1 470 3 is_stmt 1 view .LVU219
+ 682              		.loc 1 470 9 is_stmt 0 view .LVU220
+ 683 0020 A5B2     		uxth	r5, r4
+ 684              		.loc 1 470 7 view .LVU221
+ 685 0022 05EB1444 		add	r4, r5, r4, lsr #16
+ 686              	.LVL89:
+ 471:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 472:./Middlewares/LwIP/src/core/inet_chksum.c ****   return inet_cksum_pseudo_partial_base(p, proto, proto_len, chksum_len, acc);
+ 687              		.loc 1 472 3 is_stmt 1 view .LVU222
+ 688              		.loc 1 472 10 is_stmt 0 view .LVU223
+ 689 0026 0094     		str	r4, [sp]
+ 690              	.LVL90:
+ 691              		.loc 1 472 10 view .LVU224
+ 692 0028 FFF7FEFF 		bl	inet_cksum_pseudo_partial_base
+ 693              	.LVL91:
+ 473:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 694              		.loc 1 473 1 view .LVU225
+ 695 002c 03B0     		add	sp, sp, #12
+ 696              	.LCFI12:
+ 697              		.cfi_def_cfa_offset 12
+ 698              		@ sp needed
+ 699 002e 30BD     		pop	{r4, r5, pc}
+ 700              		.loc 1 473 1 view .LVU226
+ 701              		.cfi_endproc
+ 702              	.LFE30:
+ 704              		.section	.text.ip_chksum_pseudo_partial,"ax",%progbits
+ 705              		.align	1
+ 706              		.global	ip_chksum_pseudo_partial
+ 707              		.syntax unified
+ 708              		.thumb
+ 709              		.thumb_func
+ 710              		.fpu fpv5-sp-d16
+ 712              	ip_chksum_pseudo_partial:
+ 713              	.LVL92:
+ 714              	.LFB31:
+ 474:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 475:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 476:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV6
+ 477:./Middlewares/LwIP/src/core/inet_chksum.c **** /**
+ 478:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Calculates the checksum with IPv6 pseudo header used by TCP and UDP for a pbuf chain.
+ 479:./Middlewares/LwIP/src/core/inet_chksum.c ****  * IPv6 addresses are expected to be in network byte order. Will only compute for a
+ 480:./Middlewares/LwIP/src/core/inet_chksum.c ****  * portion of the payload.
+ 481:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 482:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 483:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto ipv6 protocol/next header (used for checksum of pseudo header)
+ 484:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto_len length of the ipv6 payload (used for checksum of pseudo header)
+ 485:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param chksum_len number of payload bytes used to compute chksum
+ 486:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param src source ipv6 address (used for checksum of pseudo header)
+ 487:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dest destination ipv6 address (used for checksum of pseudo header)
+ 488:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 489:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 490:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 23
+
+
+ 491:./Middlewares/LwIP/src/core/inet_chksum.c **** ip6_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 492:./Middlewares/LwIP/src/core/inet_chksum.c ****                           u16_t chksum_len, const ip6_addr_t *src, const ip6_addr_t *dest)
+ 493:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 494:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t acc = 0;
+ 495:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t addr;
+ 496:./Middlewares/LwIP/src/core/inet_chksum.c ****   u8_t addr_part;
+ 497:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 498:./Middlewares/LwIP/src/core/inet_chksum.c ****   for (addr_part = 0; addr_part < 4; addr_part++) {
+ 499:./Middlewares/LwIP/src/core/inet_chksum.c ****     addr = src->addr[addr_part];
+ 500:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (u32_t)(acc + (addr & 0xffffUL));
+ 501:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 502:./Middlewares/LwIP/src/core/inet_chksum.c ****     addr = dest->addr[addr_part];
+ 503:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (u32_t)(acc + (addr & 0xffffUL));
+ 504:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = (u32_t)(acc + ((addr >> 16) & 0xffffUL));
+ 505:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 506:./Middlewares/LwIP/src/core/inet_chksum.c ****   /* fold down to 16 bits */
+ 507:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 508:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 509:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 510:./Middlewares/LwIP/src/core/inet_chksum.c ****   return inet_cksum_pseudo_partial_base(p, proto, proto_len, chksum_len, acc);
+ 511:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 512:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV6 */
+ 513:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 514:./Middlewares/LwIP/src/core/inet_chksum.c **** /* ip_chksum_pseudo_partial:
+ 515:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 516:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Calculates the IPv4 or IPv6 pseudo Internet checksum used by TCP and UDP for a pbuf chain.
+ 517:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 518:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 519:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param src source ip address (used for checksum of pseudo header)
+ 520:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dst destination ip address (used for checksum of pseudo header)
+ 521:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto ip protocol (used for checksum of pseudo header)
+ 522:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param proto_len length of the ip data part (used for checksum of pseudo header)
+ 523:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 524:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 525:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 526:./Middlewares/LwIP/src/core/inet_chksum.c **** ip_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 527:./Middlewares/LwIP/src/core/inet_chksum.c ****                          u16_t chksum_len, const ip_addr_t *src, const ip_addr_t *dest)
+ 528:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 715              		.loc 1 528 1 is_stmt 1 view -0
+ 716              		.cfi_startproc
+ 717              		@ args = 8, pretend = 0, frame = 0
+ 718              		@ frame_needed = 0, uses_anonymous_args = 0
+ 719              		.loc 1 528 1 is_stmt 0 view .LVU228
+ 720 0000 10B5     		push	{r4, lr}
+ 721              	.LCFI13:
+ 722              		.cfi_def_cfa_offset 8
+ 723              		.cfi_offset 4, -8
+ 724              		.cfi_offset 14, -4
+ 725 0002 82B0     		sub	sp, sp, #8
+ 726              	.LCFI14:
+ 727              		.cfi_def_cfa_offset 16
+ 529:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV6
+ 530:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (IP_IS_V6(dest)) {
+ 531:./Middlewares/LwIP/src/core/inet_chksum.c ****     return ip6_chksum_pseudo_partial(p, proto, proto_len, chksum_len, ip_2_ip6(src), ip_2_ip6(dest)
+ 532:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 533:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV6 */
+ 534:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV4 && LWIP_IPV6
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 24
+
+
+ 535:./Middlewares/LwIP/src/core/inet_chksum.c ****   else
+ 536:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV4 && LWIP_IPV6 */
+ 537:./Middlewares/LwIP/src/core/inet_chksum.c **** #if LWIP_IPV4
+ 538:./Middlewares/LwIP/src/core/inet_chksum.c ****   {
+ 539:./Middlewares/LwIP/src/core/inet_chksum.c ****     return inet_chksum_pseudo_partial(p, proto, proto_len, chksum_len, ip_2_ip4(src), ip_2_ip4(dest
+ 728              		.loc 1 539 5 is_stmt 1 view .LVU229
+ 729              		.loc 1 539 12 is_stmt 0 view .LVU230
+ 730 0004 059C     		ldr	r4, [sp, #20]
+ 731 0006 0194     		str	r4, [sp, #4]
+ 732 0008 049C     		ldr	r4, [sp, #16]
+ 733 000a 0094     		str	r4, [sp]
+ 734 000c FFF7FEFF 		bl	inet_chksum_pseudo_partial
+ 735              	.LVL93:
+ 540:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 541:./Middlewares/LwIP/src/core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 542:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 736              		.loc 1 542 1 view .LVU231
+ 737 0010 02B0     		add	sp, sp, #8
+ 738              	.LCFI15:
+ 739              		.cfi_def_cfa_offset 8
+ 740              		@ sp needed
+ 741 0012 10BD     		pop	{r4, pc}
+ 742              		.loc 1 542 1 view .LVU232
+ 743              		.cfi_endproc
+ 744              	.LFE31:
+ 746              		.section	.text.inet_chksum,"ax",%progbits
+ 747              		.align	1
+ 748              		.global	inet_chksum
+ 749              		.syntax unified
+ 750              		.thumb
+ 751              		.thumb_func
+ 752              		.fpu fpv5-sp-d16
+ 754              	inet_chksum:
+ 755              	.LVL94:
+ 756              	.LFB32:
+ 543:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 544:./Middlewares/LwIP/src/core/inet_chksum.c **** /* inet_chksum:
+ 545:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 546:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Calculates the Internet checksum over a portion of memory. Used primarily for IP
+ 547:./Middlewares/LwIP/src/core/inet_chksum.c ****  * and ICMP.
+ 548:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 549:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param dataptr start of the buffer to calculate the checksum (no alignment needed)
+ 550:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param len length of the buffer to calculate the checksum
+ 551:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 552:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 553:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 554:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 555:./Middlewares/LwIP/src/core/inet_chksum.c **** inet_chksum(const void *dataptr, u16_t len)
+ 556:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 757              		.loc 1 556 1 is_stmt 1 view -0
+ 758              		.cfi_startproc
+ 759              		@ args = 0, pretend = 0, frame = 0
+ 760              		@ frame_needed = 0, uses_anonymous_args = 0
+ 761              		.loc 1 556 1 is_stmt 0 view .LVU234
+ 762 0000 08B5     		push	{r3, lr}
+ 763              	.LCFI16:
+ 764              		.cfi_def_cfa_offset 8
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 25
+
+
+ 765              		.cfi_offset 3, -8
+ 766              		.cfi_offset 14, -4
+ 557:./Middlewares/LwIP/src/core/inet_chksum.c ****   return (u16_t)~(unsigned int)LWIP_CHKSUM(dataptr, len);
+ 767              		.loc 1 557 3 is_stmt 1 view .LVU235
+ 768              		.loc 1 557 32 is_stmt 0 view .LVU236
+ 769 0002 FFF7FEFF 		bl	lwip_standard_chksum
+ 770              	.LVL95:
+ 771              		.loc 1 557 10 view .LVU237
+ 772 0006 C043     		mvns	r0, r0
+ 558:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 773              		.loc 1 558 1 view .LVU238
+ 774 0008 80B2     		uxth	r0, r0
+ 775 000a 08BD     		pop	{r3, pc}
+ 776              		.cfi_endproc
+ 777              	.LFE32:
+ 779              		.section	.text.inet_chksum_pbuf,"ax",%progbits
+ 780              		.align	1
+ 781              		.global	inet_chksum_pbuf
+ 782              		.syntax unified
+ 783              		.thumb
+ 784              		.thumb_func
+ 785              		.fpu fpv5-sp-d16
+ 787              	inet_chksum_pbuf:
+ 788              	.LVL96:
+ 789              	.LFB33:
+ 559:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 560:./Middlewares/LwIP/src/core/inet_chksum.c **** /**
+ 561:./Middlewares/LwIP/src/core/inet_chksum.c ****  * Calculate a checksum over a chain of pbufs (without pseudo-header, much like
+ 562:./Middlewares/LwIP/src/core/inet_chksum.c ****  * inet_chksum only pbufs are used).
+ 563:./Middlewares/LwIP/src/core/inet_chksum.c ****  *
+ 564:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @param p pbuf chain over that the checksum should be calculated
+ 565:./Middlewares/LwIP/src/core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 566:./Middlewares/LwIP/src/core/inet_chksum.c ****  */
+ 567:./Middlewares/LwIP/src/core/inet_chksum.c **** u16_t
+ 568:./Middlewares/LwIP/src/core/inet_chksum.c **** inet_chksum_pbuf(struct pbuf *p)
+ 569:./Middlewares/LwIP/src/core/inet_chksum.c **** {
+ 790              		.loc 1 569 1 is_stmt 1 view -0
+ 791              		.cfi_startproc
+ 792              		@ args = 0, pretend = 0, frame = 0
+ 793              		@ frame_needed = 0, uses_anonymous_args = 0
+ 794              		.loc 1 569 1 is_stmt 0 view .LVU240
+ 795 0000 70B5     		push	{r4, r5, r6, lr}
+ 796              	.LCFI17:
+ 797              		.cfi_def_cfa_offset 16
+ 798              		.cfi_offset 4, -16
+ 799              		.cfi_offset 5, -12
+ 800              		.cfi_offset 6, -8
+ 801              		.cfi_offset 14, -4
+ 802 0002 0546     		mov	r5, r0
+ 570:./Middlewares/LwIP/src/core/inet_chksum.c ****   u32_t acc;
+ 803              		.loc 1 570 3 is_stmt 1 view .LVU241
+ 571:./Middlewares/LwIP/src/core/inet_chksum.c ****   struct pbuf *q;
+ 804              		.loc 1 571 3 view .LVU242
+ 572:./Middlewares/LwIP/src/core/inet_chksum.c ****   int swapped = 0;
+ 805              		.loc 1 572 3 view .LVU243
+ 806              	.LVL97:
+ 573:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 26
+
+
+ 574:./Middlewares/LwIP/src/core/inet_chksum.c ****   acc = 0;
+ 807              		.loc 1 574 3 view .LVU244
+ 575:./Middlewares/LwIP/src/core/inet_chksum.c ****   for (q = p; q != NULL; q = q->next) {
+ 808              		.loc 1 575 3 view .LVU245
+ 572:./Middlewares/LwIP/src/core/inet_chksum.c ****   int swapped = 0;
+ 809              		.loc 1 572 7 is_stmt 0 view .LVU246
+ 810 0004 0026     		movs	r6, #0
+ 574:./Middlewares/LwIP/src/core/inet_chksum.c ****   for (q = p; q != NULL; q = q->next) {
+ 811              		.loc 1 574 7 view .LVU247
+ 812 0006 3446     		mov	r4, r6
+ 813              		.loc 1 575 3 view .LVU248
+ 814 0008 00E0     		b	.L40
+ 815              	.LVL98:
+ 816              	.L41:
+ 817              		.loc 1 575 26 is_stmt 1 discriminator 2 view .LVU249
+ 818              		.loc 1 575 28 is_stmt 0 discriminator 2 view .LVU250
+ 819 000a 2D68     		ldr	r5, [r5]
+ 820              	.LVL99:
+ 821              	.L40:
+ 822              		.loc 1 575 15 is_stmt 1 discriminator 1 view .LVU251
+ 823              		.loc 1 575 3 is_stmt 0 discriminator 1 view .LVU252
+ 824 000c 9DB1     		cbz	r5, .L45
+ 576:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc += LWIP_CHKSUM(q->payload, q->len);
+ 825              		.loc 1 576 5 is_stmt 1 view .LVU253
+ 826              		.loc 1 576 12 is_stmt 0 view .LVU254
+ 827 000e 6989     		ldrh	r1, [r5, #10]
+ 828 0010 6868     		ldr	r0, [r5, #4]
+ 829 0012 FFF7FEFF 		bl	lwip_standard_chksum
+ 830              	.LVL100:
+ 831              		.loc 1 576 9 view .LVU255
+ 832 0016 0444     		add	r4, r4, r0
+ 833              	.LVL101:
+ 577:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = FOLD_U32T(acc);
+ 834              		.loc 1 577 5 is_stmt 1 view .LVU256
+ 835              		.loc 1 577 11 is_stmt 0 view .LVU257
+ 836 0018 A0B2     		uxth	r0, r4
+ 837              		.loc 1 577 9 view .LVU258
+ 838 001a 00EB1444 		add	r4, r0, r4, lsr #16
+ 839              	.LVL102:
+ 578:./Middlewares/LwIP/src/core/inet_chksum.c ****     if (q->len % 2 != 0) {
+ 840              		.loc 1 578 5 is_stmt 1 view .LVU259
+ 841              		.loc 1 578 10 is_stmt 0 view .LVU260
+ 842 001e 6B89     		ldrh	r3, [r5, #10]
+ 843              		.loc 1 578 8 view .LVU261
+ 844 0020 13F0010F 		tst	r3, #1
+ 845 0024 F1D0     		beq	.L41
+ 579:./Middlewares/LwIP/src/core/inet_chksum.c ****       swapped = !swapped;
+ 846              		.loc 1 579 7 is_stmt 1 view .LVU262
+ 847              		.loc 1 579 17 is_stmt 0 view .LVU263
+ 848 0026 86F00106 		eor	r6, r6, #1
+ 849              	.LVL103:
+ 580:./Middlewares/LwIP/src/core/inet_chksum.c ****       acc = SWAP_BYTES_IN_WORD(acc);
+ 850              		.loc 1 580 7 is_stmt 1 view .LVU264
+ 851              		.loc 1 580 13 is_stmt 0 view .LVU265
+ 852 002a 2302     		lsls	r3, r4, #8
+ 853 002c 9BB2     		uxth	r3, r3
+ 854 002e C4F30724 		ubfx	r4, r4, #8, #8
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 27
+
+
+ 855              	.LVL104:
+ 856              		.loc 1 580 11 view .LVU266
+ 857 0032 1C43     		orrs	r4, r4, r3
+ 858              	.LVL105:
+ 859              		.loc 1 580 11 view .LVU267
+ 860 0034 E9E7     		b	.L41
+ 861              	.L45:
+ 581:./Middlewares/LwIP/src/core/inet_chksum.c ****     }
+ 582:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 583:./Middlewares/LwIP/src/core/inet_chksum.c **** 
+ 584:./Middlewares/LwIP/src/core/inet_chksum.c ****   if (swapped) {
+ 862              		.loc 1 584 3 is_stmt 1 view .LVU268
+ 863              		.loc 1 584 6 is_stmt 0 view .LVU269
+ 864 0036 26B1     		cbz	r6, .L43
+ 585:./Middlewares/LwIP/src/core/inet_chksum.c ****     acc = SWAP_BYTES_IN_WORD(acc);
+ 865              		.loc 1 585 5 is_stmt 1 view .LVU270
+ 866              		.loc 1 585 11 is_stmt 0 view .LVU271
+ 867 0038 2302     		lsls	r3, r4, #8
+ 868 003a 9BB2     		uxth	r3, r3
+ 869 003c C4F30724 		ubfx	r4, r4, #8, #8
+ 870              	.LVL106:
+ 871              		.loc 1 585 9 view .LVU272
+ 872 0040 1C43     		orrs	r4, r4, r3
+ 873              	.LVL107:
+ 874              	.L43:
+ 586:./Middlewares/LwIP/src/core/inet_chksum.c ****   }
+ 587:./Middlewares/LwIP/src/core/inet_chksum.c ****   return (u16_t)~(acc & 0xffffUL);
+ 875              		.loc 1 587 3 is_stmt 1 view .LVU273
+ 876              		.loc 1 587 10 is_stmt 0 view .LVU274
+ 877 0042 E043     		mvns	r0, r4
+ 588:./Middlewares/LwIP/src/core/inet_chksum.c **** }
+ 878              		.loc 1 588 1 view .LVU275
+ 879 0044 80B2     		uxth	r0, r0
+ 880 0046 70BD     		pop	{r4, r5, r6, pc}
+ 881              		.loc 1 588 1 view .LVU276
+ 882              		.cfi_endproc
+ 883              	.LFE33:
+ 885              		.text
+ 886              	.Letext0:
+ 887              		.file 2 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/machine/_de
+ 888              		.file 3 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/sys/lock.h"
+ 889              		.file 4 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/sys/_types.
+ 890              		.file 5 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/lib/gcc/arm-none-eabi/9.2.1/inclu
+ 891              		.file 6 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/sys/reent.h
+ 892              		.file 7 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/stdlib.h"
+ 893              		.file 8 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/sys/_stdint
+ 894              		.file 9 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/time.h"
+ 895              		.file 10 "Middlewares/LwIP/src/include/lwip/arch.h"
+ 896              		.file 11 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/ctype.h"
+ 897              		.file 12 "Middlewares/LwIP/src/include/lwip/pbuf.h"
+ 898              		.file 13 "Middlewares/LwIP/src/include/lwip/ip4_addr.h"
+ 899              		.file 14 "Middlewares/LwIP/src/include/lwip/ip_addr.h"
+ 900              		.file 15 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/stdio.h"
+ 901              		.file 16 "Middlewares/LwIP/src/include/lwip/def.h"
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s 			page 28
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 inet_chksum.c
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:18     .text.lwip_standard_chksum:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:26     .text.lwip_standard_chksum:0000000000000000 lwip_standard_chksum
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:166    .text.inet_cksum_pseudo_base:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:172    .text.inet_cksum_pseudo_base:0000000000000000 inet_cksum_pseudo_base
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:307    .rodata.inet_cksum_pseudo_partial_base.str1.4:0000000000000000 $d
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:317    .text.inet_cksum_pseudo_partial_base:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:323    .text.inet_cksum_pseudo_partial_base:0000000000000000 inet_cksum_pseudo_partial_base
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:505    .text.inet_cksum_pseudo_partial_base:00000000000000a4 $d
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:512    .text.inet_chksum_pseudo:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:519    .text.inet_chksum_pseudo:0000000000000000 inet_chksum_pseudo
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:583    .text.ip_chksum_pseudo:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:590    .text.ip_chksum_pseudo:0000000000000000 ip_chksum_pseudo
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:623    .text.inet_chksum_pseudo_partial:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:630    .text.inet_chksum_pseudo_partial:0000000000000000 inet_chksum_pseudo_partial
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:705    .text.ip_chksum_pseudo_partial:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:712    .text.ip_chksum_pseudo_partial:0000000000000000 ip_chksum_pseudo_partial
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:747    .text.inet_chksum:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:754    .text.inet_chksum:0000000000000000 inet_chksum
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:780    .text.inet_chksum_pbuf:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccwCJd8B.s:787    .text.inet_chksum_pbuf:0000000000000000 inet_chksum_pbuf
+
+UNDEFINED SYMBOLS
+lwip_htons
+printf

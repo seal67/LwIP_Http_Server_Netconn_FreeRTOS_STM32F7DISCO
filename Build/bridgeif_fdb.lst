@@ -1,0 +1,1055 @@
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"bridgeif_fdb.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.bridgeif_fdb_age_one_second,"ax",%progbits
+  18              		.align	1
+  19              		.arch armv7e-m
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv5-sp-d16
+  25              	bridgeif_fdb_age_one_second:
+  26              	.LVL0:
+  27              	.LFB32:
+  28              		.file 1 "./Middlewares/LwIP/src/netif/bridgeif_fdb.c"
+   1:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** /**
+   2:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * @file
+   3:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * lwIP netif implementing an FDB for IEEE 802.1D MAC Bridge
+   4:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  */
+   5:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+   6:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** /*
+   7:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * Copyright (c) 2017 Simon Goldschmidt.
+   8:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * All rights reserved.
+   9:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *
+  10:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * Redistribution and use in source and binary forms, with or without modification,
+  11:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * are permitted provided that the following conditions are met:
+  12:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *
+  13:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * 1. Redistributions of source code must retain the above copyright notice,
+  14:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *    this list of conditions and the following disclaimer.
+  15:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  16:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *    this list of conditions and the following disclaimer in the documentation
+  17:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *    and/or other materials provided with the distribution.
+  18:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * 3. The name of the author may not be used to endorse or promote products
+  19:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *    derived from this software without specific prior written permission.
+  20:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *
+  21:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+  22:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  23:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+  24:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  25:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+  26:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  27:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  28:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+  29:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+  30:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * OF SUCH DAMAGE.
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 2
+
+
+  31:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *
+  32:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * This file is part of the lwIP TCP/IP stack.
+  33:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *
+  34:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * Author: Simon Goldschmidt <goldsimon@gmx.de>
+  35:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *
+  36:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  */
+  37:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+  38:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** /**
+  39:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * @defgroup bridgeif_fdb FDB example code
+  40:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * @ingroup bridgeif
+  41:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * This file implements an example for an FDB (Forwarding DataBase)
+  42:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  */
+  43:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+  44:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** #include "netif/bridgeif.h"
+  45:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** #include "lwip/sys.h"
+  46:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** #include "lwip/mem.h"
+  47:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** #include "lwip/timeouts.h"
+  48:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** #include <string.h>
+  49:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+  50:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** #define BRIDGEIF_AGE_TIMER_MS 1000
+  51:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+  52:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** #define BR_FDB_TIMEOUT_SEC  (60*5) /* 5 minutes FDB timeout */
+  53:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+  54:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** typedef struct bridgeif_dfdb_entry_s {
+  55:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   u8_t used;
+  56:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   u8_t port;
+  57:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   u32_t ts;
+  58:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   struct eth_addr addr;
+  59:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** } bridgeif_dfdb_entry_t;
+  60:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+  61:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** typedef struct bridgeif_dfdb_s {
+  62:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   u16_t max_fdb_entries;
+  63:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_dfdb_entry_t *fdb;
+  64:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** } bridgeif_dfdb_t;
+  65:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+  66:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** /**
+  67:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * @ingroup bridgeif_fdb
+  68:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * A real simple and slow implementation of an auto-learning forwarding database that
+  69:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * remembers known src mac addresses to know which port to send frames destined for that
+  70:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * mac address.
+  71:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  *
+  72:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * ATTENTION: This is meant as an example only, in real-world use, you should 
+  73:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * provide a better implementation :-)
+  74:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  */
+  75:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** void
+  76:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** bridgeif_fdb_update_src(void *fdb_ptr, struct eth_addr *src_addr, u8_t port_idx)
+  77:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** {
+  78:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   int i;
+  79:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_dfdb_t *fdb = (bridgeif_dfdb_t *)fdb_ptr;
+  80:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_DECL_PROTECT(lev);
+  81:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_READ_PROTECT(lev);
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   for (i = 0; i < fdb->max_fdb_entries; i++) {
+  83:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  84:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+  85:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, src_addr, sizeof(struct eth_addr))) {
+  86:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: update src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+  87:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****                                          src_addr->addr[0], src_addr->addr[1], src_addr->addr[2], s
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 3
+
+
+  88:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****                                          port_idx, i));
+  89:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_WRITE_PROTECT(lev);
+  90:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->ts = BR_FDB_TIMEOUT_SEC;
+  91:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->port = port_idx;
+  92:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_WRITE_UNPROTECT(lev);
+  93:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+  94:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         return;
+  95:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+  96:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     }
+  97:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   }
+  98:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   /* not found, allocate new entry from free */
+  99:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   for (i = 0; i < fdb->max_fdb_entries; i++) {
+ 100:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 101:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (!e->used || !e->ts) {
+ 102:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+ 103:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       /* check again when protected */
+ 104:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!e->used || !e->ts) {
+ 105:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: create src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+ 106:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****                                          src_addr->addr[0], src_addr->addr[1], src_addr->addr[2], s
+ 107:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****                                          port_idx, i));
+ 108:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         memcpy(&e->addr, src_addr, sizeof(struct eth_addr));
+ 109:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->ts = BR_FDB_TIMEOUT_SEC;
+ 110:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->port = port_idx;
+ 111:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->used = 1;
+ 112:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_WRITE_UNPROTECT(lev);
+ 113:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+ 114:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         return;
+ 115:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 116:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_UNPROTECT(lev);
+ 117:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     }
+ 118:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   }
+ 119:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_READ_UNPROTECT(lev);
+ 120:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   /* not found, no free entry -> flood */
+ 121:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** }
+ 122:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 123:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** /** 
+ 124:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * @ingroup bridgeif_fdb
+ 125:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * Walk our list of auto-learnt fdb entries and return a port to forward or BR_FLOOD if unknown 
+ 126:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  */
+ 127:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** bridgeif_portmask_t
+ 128:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** bridgeif_fdb_get_dst_ports(void *fdb_ptr, struct eth_addr *dst_addr)
+ 129:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** {
+ 130:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   int i;
+ 131:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_dfdb_t *fdb = (bridgeif_dfdb_t *)fdb_ptr;
+ 132:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_DECL_PROTECT(lev);
+ 133:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_READ_PROTECT(lev);
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   for (i = 0; i < fdb->max_fdb_entries; i++) {
+ 135:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 136:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 137:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, dst_addr, sizeof(struct eth_addr))) {
+ 138:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         bridgeif_portmask_t ret = (bridgeif_portmask_t)(1 << e->port);
+ 139:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+ 140:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         return ret;
+ 141:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 142:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     }
+ 143:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   }
+ 144:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_READ_UNPROTECT(lev);
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 4
+
+
+ 145:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   return BR_FLOOD;
+ 146:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** }
+ 147:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 148:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** /**
+ 149:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * @ingroup bridgeif_fdb
+ 150:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * Aging implementation of our simple fdb
+ 151:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  */
+ 152:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** static void
+ 153:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** bridgeif_fdb_age_one_second(void *fdb_ptr)
+ 154:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** {
+  29              		.loc 1 154 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+ 155:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   int i;
+  34              		.loc 1 155 3 view .LVU1
+ 156:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_dfdb_t *fdb;
+  35              		.loc 1 156 3 view .LVU2
+ 157:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_DECL_PROTECT(lev);
+  36              		.loc 1 157 29 view .LVU3
+ 158:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 159:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   fdb = (bridgeif_dfdb_t *)fdb_ptr;
+  37              		.loc 1 159 3 view .LVU4
+ 160:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_READ_PROTECT(lev);
+  38              		.loc 1 160 29 view .LVU5
+ 161:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 162:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   for (i = 0; i < fdb->max_fdb_entries; i++) {
+  39              		.loc 1 162 3 view .LVU6
+  40              		.loc 1 162 10 is_stmt 0 view .LVU7
+  41 0000 0023     		movs	r3, #0
+  42              	.LVL1:
+  43              		.loc 1 162 15 is_stmt 1 view .LVU8
+  44              		.loc 1 162 22 is_stmt 0 view .LVU9
+  45 0002 0288     		ldrh	r2, [r0]
+  46              		.loc 1 162 3 view .LVU10
+  47 0004 9A42     		cmp	r2, r3
+  48 0006 17DD     		ble	.L8
+ 154:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   int i;
+  49              		.loc 1 154 1 view .LVU11
+  50 0008 30B4     		push	{r4, r5}
+  51              	.LCFI0:
+  52              		.cfi_def_cfa_offset 8
+  53              		.cfi_offset 4, -8
+  54              		.cfi_offset 5, -4
+  55 000a 03E0     		b	.L4
+  56              	.LVL2:
+  57              	.L3:
+  58              	.LBB2:
+ 163:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 164:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 165:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+ 166:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       /* check again when protected */
+ 167:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (e->used && e->ts) {
+ 168:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         if (--e->ts == 0) {
+ 169:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****           e->used = 0;
+ 170:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         }
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 5
+
+
+ 171:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 172:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_UNPROTECT(lev);
+  59              		.loc 1 172 36 is_stmt 1 discriminator 2 view .LVU12
+  60              	.LBE2:
+ 162:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  61              		.loc 1 162 41 discriminator 2 view .LVU13
+ 162:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  62              		.loc 1 162 42 is_stmt 0 discriminator 2 view .LVU14
+  63 000c 0133     		adds	r3, r3, #1
+  64              	.LVL3:
+ 162:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  65              		.loc 1 162 15 is_stmt 1 discriminator 2 view .LVU15
+ 162:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  66              		.loc 1 162 22 is_stmt 0 discriminator 2 view .LVU16
+  67 000e 0288     		ldrh	r2, [r0]
+ 162:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  68              		.loc 1 162 3 discriminator 2 view .LVU17
+  69 0010 9A42     		cmp	r2, r3
+  70 0012 0FDD     		ble	.L9
+  71              	.LVL4:
+  72              	.L4:
+  73              	.LBB3:
+ 163:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  74              		.loc 1 163 5 is_stmt 1 view .LVU18
+ 163:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  75              		.loc 1 163 36 is_stmt 0 view .LVU19
+  76 0014 4268     		ldr	r2, [r0, #4]
+ 163:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  77              		.loc 1 163 41 view .LVU20
+  78 0016 1901     		lsls	r1, r3, #4
+ 163:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+  79              		.loc 1 163 28 view .LVU21
+  80 0018 02EB0315 		add	r5, r2, r3, lsl #4
+  81              	.LVL5:
+ 164:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+  82              		.loc 1 164 5 is_stmt 1 view .LVU22
+ 164:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+  83              		.loc 1 164 10 is_stmt 0 view .LVU23
+  84 001c 545C     		ldrb	r4, [r2, r1]	@ zero_extendqisi2
+ 164:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+  85              		.loc 1 164 8 view .LVU24
+  86 001e 002C     		cmp	r4, #0
+  87 0020 F4D0     		beq	.L3
+ 164:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+  88              		.loc 1 164 21 discriminator 1 view .LVU25
+  89 0022 6C68     		ldr	r4, [r5, #4]
+ 164:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+  90              		.loc 1 164 17 discriminator 1 view .LVU26
+  91 0024 002C     		cmp	r4, #0
+  92 0026 F1D0     		beq	.L3
+ 165:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       /* check again when protected */
+  93              		.loc 1 165 34 is_stmt 1 view .LVU27
+ 167:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         if (--e->ts == 0) {
+  94              		.loc 1 167 7 view .LVU28
+ 168:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****           e->used = 0;
+  95              		.loc 1 168 9 view .LVU29
+ 168:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****           e->used = 0;
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 6
+
+
+  96              		.loc 1 168 13 is_stmt 0 view .LVU30
+  97 0028 013C     		subs	r4, r4, #1
+ 168:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****           e->used = 0;
+  98              		.loc 1 168 12 view .LVU31
+  99 002a 6C60     		str	r4, [r5, #4]
+ 100 002c 002C     		cmp	r4, #0
+ 101 002e EDD1     		bne	.L3
+ 169:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         }
+ 102              		.loc 1 169 11 is_stmt 1 view .LVU32
+ 169:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         }
+ 103              		.loc 1 169 19 is_stmt 0 view .LVU33
+ 104 0030 5454     		strb	r4, [r2, r1]
+ 105 0032 EBE7     		b	.L3
+ 106              	.L9:
+ 169:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         }
+ 107              		.loc 1 169 19 view .LVU34
+ 108              	.LBE3:
+ 173:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     }
+ 174:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   }
+ 175:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_READ_UNPROTECT(lev);
+ 176:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** }
+ 109              		.loc 1 176 1 view .LVU35
+ 110 0034 30BC     		pop	{r4, r5}
+ 111              	.LCFI1:
+ 112              		.cfi_restore 5
+ 113              		.cfi_restore 4
+ 114              		.cfi_def_cfa_offset 0
+ 115              	.LVL6:
+ 116              		.loc 1 176 1 view .LVU36
+ 117 0036 7047     		bx	lr
+ 118              	.L8:
+ 119              		.loc 1 176 1 view .LVU37
+ 120 0038 7047     		bx	lr
+ 121              		.cfi_endproc
+ 122              	.LFE32:
+ 124              		.section	.rodata.bridgeif_age_tmr.str1.4,"aMS",%progbits,1
+ 125              		.align	2
+ 126              	.LC0:
+ 127 0000 2E2F4D69 		.ascii	"./Middlewares/LwIP/src/netif/bridgeif_fdb.c\000"
+ 127      64646C65 
+ 127      77617265 
+ 127      732F4C77 
+ 127      49502F73 
+ 128              		.align	2
+ 129              	.LC1:
+ 130 002c 696E7661 		.ascii	"invalid arg\000"
+ 130      6C696420 
+ 130      61726700 
+ 131              		.align	2
+ 132              	.LC2:
+ 133 0038 41737365 		.ascii	"Assertion \"%s\" failed at line %d in %s\012\000"
+ 133      7274696F 
+ 133      6E202225 
+ 133      73222066 
+ 133      61696C65 
+ 134              		.section	.text.bridgeif_age_tmr,"ax",%progbits
+ 135              		.align	1
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 7
+
+
+ 136              		.syntax unified
+ 137              		.thumb
+ 138              		.thumb_func
+ 139              		.fpu fpv5-sp-d16
+ 141              	bridgeif_age_tmr:
+ 142              	.LVL7:
+ 143              	.LFB33:
+ 177:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 178:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** /** Timer callback for fdb aging, called once per second */
+ 179:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** static void
+ 180:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** bridgeif_age_tmr(void *arg)
+ 181:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** {
+ 144              		.loc 1 181 1 is_stmt 1 view -0
+ 145              		.cfi_startproc
+ 146              		@ args = 0, pretend = 0, frame = 0
+ 147              		@ frame_needed = 0, uses_anonymous_args = 0
+ 148              		.loc 1 181 1 is_stmt 0 view .LVU39
+ 149 0000 10B5     		push	{r4, lr}
+ 150              	.LCFI2:
+ 151              		.cfi_def_cfa_offset 8
+ 152              		.cfi_offset 4, -8
+ 153              		.cfi_offset 14, -4
+ 182:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_dfdb_t *fdb = (bridgeif_dfdb_t *)arg;
+ 154              		.loc 1 182 3 is_stmt 1 view .LVU40
+ 155              	.LVL8:
+ 183:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 184:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   LWIP_ASSERT("invalid arg", arg != NULL);
+ 156              		.loc 1 184 3 view .LVU41
+ 157              		.loc 1 184 3 view .LVU42
+ 158 0002 0446     		mov	r4, r0
+ 159 0004 48B1     		cbz	r0, .L13
+ 160              	.LVL9:
+ 161              	.L11:
+ 162              		.loc 1 184 3 discriminator 3 view .LVU43
+ 163              		.loc 1 184 3 discriminator 3 view .LVU44
+ 185:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 186:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_fdb_age_one_second(fdb);
+ 164              		.loc 1 186 3 discriminator 3 view .LVU45
+ 165 0006 2046     		mov	r0, r4
+ 166 0008 FFF7FEFF 		bl	bridgeif_fdb_age_one_second
+ 167              	.LVL10:
+ 187:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   sys_timeout(BRIDGEIF_AGE_TIMER_MS, bridgeif_age_tmr, arg);
+ 168              		.loc 1 187 3 discriminator 3 view .LVU46
+ 169 000c 2246     		mov	r2, r4
+ 170 000e 0649     		ldr	r1, .L14
+ 171 0010 4FF47A70 		mov	r0, #1000
+ 172 0014 FFF7FEFF 		bl	sys_timeout
+ 173              	.LVL11:
+ 188:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** }
+ 174              		.loc 1 188 1 is_stmt 0 discriminator 3 view .LVU47
+ 175 0018 10BD     		pop	{r4, pc}
+ 176              	.LVL12:
+ 177              	.L13:
+ 184:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 178              		.loc 1 184 3 is_stmt 1 discriminator 1 view .LVU48
+ 184:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 179              		.loc 1 184 3 discriminator 1 view .LVU49
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 8
+
+
+ 180 001a 044B     		ldr	r3, .L14+4
+ 181 001c B822     		movs	r2, #184
+ 182 001e 0449     		ldr	r1, .L14+8
+ 183 0020 0448     		ldr	r0, .L14+12
+ 184              	.LVL13:
+ 184:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 185              		.loc 1 184 3 is_stmt 0 discriminator 1 view .LVU50
+ 186 0022 FFF7FEFF 		bl	printf
+ 187              	.LVL14:
+ 188 0026 EEE7     		b	.L11
+ 189              	.L15:
+ 190              		.align	2
+ 191              	.L14:
+ 192 0028 00000000 		.word	bridgeif_age_tmr
+ 193 002c 00000000 		.word	.LC0
+ 194 0030 2C000000 		.word	.LC1
+ 195 0034 38000000 		.word	.LC2
+ 196              		.cfi_endproc
+ 197              	.LFE33:
+ 199              		.section	.text.bridgeif_fdb_update_src,"ax",%progbits
+ 200              		.align	1
+ 201              		.global	bridgeif_fdb_update_src
+ 202              		.syntax unified
+ 203              		.thumb
+ 204              		.thumb_func
+ 205              		.fpu fpv5-sp-d16
+ 207              	bridgeif_fdb_update_src:
+ 208              	.LVL15:
+ 209              	.LFB30:
+  77:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   int i;
+ 210              		.loc 1 77 1 is_stmt 1 view -0
+ 211              		.cfi_startproc
+ 212              		@ args = 0, pretend = 0, frame = 0
+ 213              		@ frame_needed = 0, uses_anonymous_args = 0
+  77:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   int i;
+ 214              		.loc 1 77 1 is_stmt 0 view .LVU52
+ 215 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 216              	.LCFI3:
+ 217              		.cfi_def_cfa_offset 32
+ 218              		.cfi_offset 3, -32
+ 219              		.cfi_offset 4, -28
+ 220              		.cfi_offset 5, -24
+ 221              		.cfi_offset 6, -20
+ 222              		.cfi_offset 7, -16
+ 223              		.cfi_offset 8, -12
+ 224              		.cfi_offset 9, -8
+ 225              		.cfi_offset 14, -4
+ 226 0004 0646     		mov	r6, r0
+ 227 0006 0F46     		mov	r7, r1
+ 228 0008 9046     		mov	r8, r2
+  78:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_dfdb_t *fdb = (bridgeif_dfdb_t *)fdb_ptr;
+ 229              		.loc 1 78 3 is_stmt 1 view .LVU53
+  79:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_DECL_PROTECT(lev);
+ 230              		.loc 1 79 3 view .LVU54
+ 231              	.LVL16:
+  80:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_READ_PROTECT(lev);
+ 232              		.loc 1 80 29 view .LVU55
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 9
+
+
+  81:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   for (i = 0; i < fdb->max_fdb_entries; i++) {
+ 233              		.loc 1 81 29 view .LVU56
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 234              		.loc 1 82 3 view .LVU57
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 235              		.loc 1 82 10 is_stmt 0 view .LVU58
+ 236 000a 0024     		movs	r4, #0
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 237              		.loc 1 82 3 view .LVU59
+ 238 000c 00E0     		b	.L17
+ 239              	.LVL17:
+ 240              	.L18:
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 241              		.loc 1 82 41 is_stmt 1 discriminator 2 view .LVU60
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 242              		.loc 1 82 42 is_stmt 0 discriminator 2 view .LVU61
+ 243 000e 0134     		adds	r4, r4, #1
+ 244              	.LVL18:
+ 245              	.L17:
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 246              		.loc 1 82 15 is_stmt 1 discriminator 1 view .LVU62
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 247              		.loc 1 82 22 is_stmt 0 discriminator 1 view .LVU63
+ 248 0010 3288     		ldrh	r2, [r6]
+  82:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 249              		.loc 1 82 3 discriminator 1 view .LVU64
+ 250 0012 A242     		cmp	r2, r4
+ 251 0014 19DD     		ble	.L27
+ 252              	.LBB4:
+  83:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 253              		.loc 1 83 5 is_stmt 1 view .LVU65
+  83:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 254              		.loc 1 83 36 is_stmt 0 view .LVU66
+ 255 0016 7568     		ldr	r5, [r6, #4]
+  83:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 256              		.loc 1 83 41 view .LVU67
+ 257 0018 2301     		lsls	r3, r4, #4
+  83:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 258              		.loc 1 83 28 view .LVU68
+ 259 001a 05EB0419 		add	r9, r5, r4, lsl #4
+ 260              	.LVL19:
+  84:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, src_addr, sizeof(struct eth_addr))) {
+ 261              		.loc 1 84 5 is_stmt 1 view .LVU69
+  84:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, src_addr, sizeof(struct eth_addr))) {
+ 262              		.loc 1 84 10 is_stmt 0 view .LVU70
+ 263 001e EB5C     		ldrb	r3, [r5, r3]	@ zero_extendqisi2
+  84:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, src_addr, sizeof(struct eth_addr))) {
+ 264              		.loc 1 84 8 view .LVU71
+ 265 0020 002B     		cmp	r3, #0
+ 266 0022 F4D0     		beq	.L18
+  84:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, src_addr, sizeof(struct eth_addr))) {
+ 267              		.loc 1 84 21 discriminator 1 view .LVU72
+ 268 0024 D9F80430 		ldr	r3, [r9, #4]
+  84:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, src_addr, sizeof(struct eth_addr))) {
+ 269              		.loc 1 84 17 discriminator 1 view .LVU73
+ 270 0028 002B     		cmp	r3, #0
+ 271 002a F0D0     		beq	.L18
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 10
+
+
+  85:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: update src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+ 272              		.loc 1 85 7 is_stmt 1 view .LVU74
+  85:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: update src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+ 273              		.loc 1 85 12 is_stmt 0 view .LVU75
+ 274 002c 0622     		movs	r2, #6
+ 275 002e 3946     		mov	r1, r7
+ 276 0030 09F10800 		add	r0, r9, #8
+ 277 0034 FFF7FEFF 		bl	memcmp
+ 278              	.LVL20:
+  85:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: update src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+ 279              		.loc 1 85 10 view .LVU76
+ 280 0038 0028     		cmp	r0, #0
+ 281 003a E8D1     		bne	.L18
+  88:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_WRITE_PROTECT(lev);
+ 282              		.loc 1 88 55 is_stmt 1 view .LVU77
+  89:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->ts = BR_FDB_TIMEOUT_SEC;
+ 283              		.loc 1 89 36 view .LVU78
+  90:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->port = port_idx;
+ 284              		.loc 1 90 9 view .LVU79
+  90:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->port = port_idx;
+ 285              		.loc 1 90 15 is_stmt 0 view .LVU80
+ 286 003c 4FF49673 		mov	r3, #300
+ 287 0040 C9F80430 		str	r3, [r9, #4]
+  91:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_WRITE_UNPROTECT(lev);
+ 288              		.loc 1 91 9 is_stmt 1 view .LVU81
+  91:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_WRITE_UNPROTECT(lev);
+ 289              		.loc 1 91 17 is_stmt 0 view .LVU82
+ 290 0044 89F80180 		strb	r8, [r9, #1]
+  92:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+ 291              		.loc 1 92 38 is_stmt 1 view .LVU83
+  93:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         return;
+ 292              		.loc 1 93 37 view .LVU84
+  94:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 293              		.loc 1 94 9 view .LVU85
+ 294 0048 1DE0     		b	.L16
+ 295              	.LVL21:
+ 296              	.L27:
+  94:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 297              		.loc 1 94 9 is_stmt 0 view .LVU86
+ 298              	.LBE4:
+  99:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 299              		.loc 1 99 10 view .LVU87
+ 300 004a 0023     		movs	r3, #0
+ 301 004c 03E0     		b	.L21
+ 302              	.LVL22:
+ 303              	.L22:
+ 304              	.LBB5:
+ 102:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       /* check again when protected */
+ 305              		.loc 1 102 34 is_stmt 1 view .LVU88
+ 104:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: create src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+ 306              		.loc 1 104 7 view .LVU89
+ 104:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: create src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+ 307              		.loc 1 104 10 is_stmt 0 view .LVU90
+ 308 004e 79B1     		cbz	r1, .L24
+ 104:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: create src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+ 309              		.loc 1 104 25 discriminator 1 view .LVU91
+ 310 0050 6168     		ldr	r1, [r4, #4]
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 11
+
+
+ 104:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         LWIP_DEBUGF(BRIDGEIF_FDB_DEBUG, ("br: create src %02x:%02x:%02x:%02x:%02x:%02x (from %d) @ 
+ 311              		.loc 1 104 20 discriminator 1 view .LVU92
+ 312 0052 69B1     		cbz	r1, .L24
+ 313              	.L23:
+ 116:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     }
+ 314              		.loc 1 116 36 is_stmt 1 discriminator 2 view .LVU93
+ 315              	.LBE5:
+  99:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 316              		.loc 1 99 41 discriminator 2 view .LVU94
+  99:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 317              		.loc 1 99 42 is_stmt 0 discriminator 2 view .LVU95
+ 318 0054 0133     		adds	r3, r3, #1
+ 319              	.LVL23:
+ 320              	.L21:
+  99:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 321              		.loc 1 99 15 is_stmt 1 discriminator 1 view .LVU96
+  99:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 322              		.loc 1 99 3 is_stmt 0 discriminator 1 view .LVU97
+ 323 0056 9A42     		cmp	r2, r3
+ 324 0058 15DD     		ble	.L16
+ 325              	.LBB6:
+ 100:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (!e->used || !e->ts) {
+ 326              		.loc 1 100 5 is_stmt 1 view .LVU98
+ 100:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (!e->used || !e->ts) {
+ 327              		.loc 1 100 36 is_stmt 0 view .LVU99
+ 328 005a 7068     		ldr	r0, [r6, #4]
+ 100:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (!e->used || !e->ts) {
+ 329              		.loc 1 100 41 view .LVU100
+ 330 005c 1901     		lsls	r1, r3, #4
+ 100:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (!e->used || !e->ts) {
+ 331              		.loc 1 100 28 view .LVU101
+ 332 005e 00EB0314 		add	r4, r0, r3, lsl #4
+ 333              	.LVL24:
+ 101:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+ 334              		.loc 1 101 5 is_stmt 1 view .LVU102
+ 101:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+ 335              		.loc 1 101 11 is_stmt 0 view .LVU103
+ 336 0062 415C     		ldrb	r1, [r0, r1]	@ zero_extendqisi2
+ 101:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+ 337              		.loc 1 101 8 view .LVU104
+ 338 0064 0029     		cmp	r1, #0
+ 339 0066 F2D0     		beq	.L22
+ 101:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+ 340              		.loc 1 101 23 discriminator 1 view .LVU105
+ 341 0068 6068     		ldr	r0, [r4, #4]
+ 101:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       BRIDGEIF_WRITE_PROTECT(lev);
+ 342              		.loc 1 101 18 discriminator 1 view .LVU106
+ 343 006a 0028     		cmp	r0, #0
+ 344 006c F2D1     		bne	.L23
+ 345 006e EEE7     		b	.L22
+ 346              	.L24:
+ 107:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         memcpy(&e->addr, src_addr, sizeof(struct eth_addr));
+ 347              		.loc 1 107 55 is_stmt 1 view .LVU107
+ 108:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->ts = BR_FDB_TIMEOUT_SEC;
+ 348              		.loc 1 108 9 view .LVU108
+ 349 0070 3B68     		ldr	r3, [r7]	@ unaligned
+ 350              	.LVL25:
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 12
+
+
+ 108:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->ts = BR_FDB_TIMEOUT_SEC;
+ 351              		.loc 1 108 9 is_stmt 0 view .LVU109
+ 352 0072 A360     		str	r3, [r4, #8]	@ unaligned
+ 353 0074 BB88     		ldrh	r3, [r7, #4]	@ unaligned
+ 354 0076 A381     		strh	r3, [r4, #12]	@ unaligned
+ 109:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->port = port_idx;
+ 355              		.loc 1 109 9 is_stmt 1 view .LVU110
+ 109:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->port = port_idx;
+ 356              		.loc 1 109 15 is_stmt 0 view .LVU111
+ 357 0078 4FF49673 		mov	r3, #300
+ 358 007c 6360     		str	r3, [r4, #4]
+ 110:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->used = 1;
+ 359              		.loc 1 110 9 is_stmt 1 view .LVU112
+ 110:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         e->used = 1;
+ 360              		.loc 1 110 17 is_stmt 0 view .LVU113
+ 361 007e 84F80180 		strb	r8, [r4, #1]
+ 111:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_WRITE_UNPROTECT(lev);
+ 362              		.loc 1 111 9 is_stmt 1 view .LVU114
+ 111:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_WRITE_UNPROTECT(lev);
+ 363              		.loc 1 111 17 is_stmt 0 view .LVU115
+ 364 0082 0123     		movs	r3, #1
+ 365 0084 2370     		strb	r3, [r4]
+ 112:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+ 366              		.loc 1 112 38 is_stmt 1 view .LVU116
+ 113:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         return;
+ 367              		.loc 1 113 37 view .LVU117
+ 114:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 368              		.loc 1 114 9 view .LVU118
+ 369              	.LVL26:
+ 370              	.L16:
+ 114:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 371              		.loc 1 114 9 is_stmt 0 view .LVU119
+ 372              	.LBE6:
+ 121:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 373              		.loc 1 121 1 view .LVU120
+ 374 0086 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 121:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 375              		.loc 1 121 1 view .LVU121
+ 376              		.cfi_endproc
+ 377              	.LFE30:
+ 379              		.section	.text.bridgeif_fdb_get_dst_ports,"ax",%progbits
+ 380              		.align	1
+ 381              		.global	bridgeif_fdb_get_dst_ports
+ 382              		.syntax unified
+ 383              		.thumb
+ 384              		.thumb_func
+ 385              		.fpu fpv5-sp-d16
+ 387              	bridgeif_fdb_get_dst_ports:
+ 388              	.LVL27:
+ 389              	.LFB31:
+ 129:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   int i;
+ 390              		.loc 1 129 1 is_stmt 1 view -0
+ 391              		.cfi_startproc
+ 392              		@ args = 0, pretend = 0, frame = 0
+ 393              		@ frame_needed = 0, uses_anonymous_args = 0
+ 129:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   int i;
+ 394              		.loc 1 129 1 is_stmt 0 view .LVU123
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 13
+
+
+ 395 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 396              	.LCFI4:
+ 397              		.cfi_def_cfa_offset 24
+ 398              		.cfi_offset 3, -24
+ 399              		.cfi_offset 4, -20
+ 400              		.cfi_offset 5, -16
+ 401              		.cfi_offset 6, -12
+ 402              		.cfi_offset 7, -8
+ 403              		.cfi_offset 14, -4
+ 404 0002 0546     		mov	r5, r0
+ 405 0004 0E46     		mov	r6, r1
+ 130:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_dfdb_t *fdb = (bridgeif_dfdb_t *)fdb_ptr;
+ 406              		.loc 1 130 3 is_stmt 1 view .LVU124
+ 131:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_DECL_PROTECT(lev);
+ 407              		.loc 1 131 3 view .LVU125
+ 408              	.LVL28:
+ 132:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   BRIDGEIF_READ_PROTECT(lev);
+ 409              		.loc 1 132 29 view .LVU126
+ 133:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   for (i = 0; i < fdb->max_fdb_entries; i++) {
+ 410              		.loc 1 133 29 view .LVU127
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 411              		.loc 1 134 3 view .LVU128
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 412              		.loc 1 134 10 is_stmt 0 view .LVU129
+ 413 0006 0024     		movs	r4, #0
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 414              		.loc 1 134 3 view .LVU130
+ 415 0008 00E0     		b	.L29
+ 416              	.LVL29:
+ 417              	.L30:
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 418              		.loc 1 134 41 is_stmt 1 discriminator 2 view .LVU131
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 419              		.loc 1 134 42 is_stmt 0 discriminator 2 view .LVU132
+ 420 000a 0134     		adds	r4, r4, #1
+ 421              	.LVL30:
+ 422              	.L29:
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 423              		.loc 1 134 15 is_stmt 1 discriminator 1 view .LVU133
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 424              		.loc 1 134 22 is_stmt 0 discriminator 1 view .LVU134
+ 425 000c 2B88     		ldrh	r3, [r5]
+ 134:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+ 426              		.loc 1 134 3 discriminator 1 view .LVU135
+ 427 000e A342     		cmp	r3, r4
+ 428 0010 16DD     		ble	.L34
+ 429              	.LBB7:
+ 135:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 430              		.loc 1 135 5 is_stmt 1 view .LVU136
+ 135:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 431              		.loc 1 135 36 is_stmt 0 view .LVU137
+ 432 0012 6A68     		ldr	r2, [r5, #4]
+ 135:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 433              		.loc 1 135 41 view .LVU138
+ 434 0014 2301     		lsls	r3, r4, #4
+ 135:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     if (e->used && e->ts) {
+ 435              		.loc 1 135 28 view .LVU139
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 14
+
+
+ 436 0016 02EB0417 		add	r7, r2, r4, lsl #4
+ 437              	.LVL31:
+ 136:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, dst_addr, sizeof(struct eth_addr))) {
+ 438              		.loc 1 136 5 is_stmt 1 view .LVU140
+ 136:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, dst_addr, sizeof(struct eth_addr))) {
+ 439              		.loc 1 136 10 is_stmt 0 view .LVU141
+ 440 001a D35C     		ldrb	r3, [r2, r3]	@ zero_extendqisi2
+ 136:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, dst_addr, sizeof(struct eth_addr))) {
+ 441              		.loc 1 136 8 view .LVU142
+ 442 001c 002B     		cmp	r3, #0
+ 443 001e F4D0     		beq	.L30
+ 136:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, dst_addr, sizeof(struct eth_addr))) {
+ 444              		.loc 1 136 21 discriminator 1 view .LVU143
+ 445 0020 7B68     		ldr	r3, [r7, #4]
+ 136:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       if (!memcmp(&e->addr, dst_addr, sizeof(struct eth_addr))) {
+ 446              		.loc 1 136 17 discriminator 1 view .LVU144
+ 447 0022 002B     		cmp	r3, #0
+ 448 0024 F1D0     		beq	.L30
+ 137:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         bridgeif_portmask_t ret = (bridgeif_portmask_t)(1 << e->port);
+ 449              		.loc 1 137 7 is_stmt 1 view .LVU145
+ 137:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         bridgeif_portmask_t ret = (bridgeif_portmask_t)(1 << e->port);
+ 450              		.loc 1 137 12 is_stmt 0 view .LVU146
+ 451 0026 0622     		movs	r2, #6
+ 452 0028 3146     		mov	r1, r6
+ 453 002a 07F10800 		add	r0, r7, #8
+ 454 002e FFF7FEFF 		bl	memcmp
+ 455              	.LVL32:
+ 137:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         bridgeif_portmask_t ret = (bridgeif_portmask_t)(1 << e->port);
+ 456              		.loc 1 137 10 view .LVU147
+ 457 0032 0028     		cmp	r0, #0
+ 458 0034 E9D1     		bne	.L30
+ 459              	.LBB8:
+ 138:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+ 460              		.loc 1 138 9 is_stmt 1 view .LVU148
+ 138:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+ 461              		.loc 1 138 63 is_stmt 0 view .LVU149
+ 462 0036 7B78     		ldrb	r3, [r7, #1]	@ zero_extendqisi2
+ 138:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+ 463              		.loc 1 138 59 view .LVU150
+ 464 0038 0120     		movs	r0, #1
+ 465 003a 9840     		lsls	r0, r0, r3
+ 138:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         BRIDGEIF_READ_UNPROTECT(lev);
+ 466              		.loc 1 138 29 view .LVU151
+ 467 003c C0B2     		uxtb	r0, r0
+ 468              	.LVL33:
+ 139:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****         return ret;
+ 469              		.loc 1 139 37 is_stmt 1 view .LVU152
+ 140:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 470              		.loc 1 140 9 view .LVU153
+ 140:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 471              		.loc 1 140 16 is_stmt 0 view .LVU154
+ 472 003e 00E0     		b	.L31
+ 473              	.LVL34:
+ 474              	.L34:
+ 140:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****       }
+ 475              		.loc 1 140 16 view .LVU155
+ 476              	.LBE8:
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 15
+
+
+ 477              	.LBE7:
+ 145:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** }
+ 478              		.loc 1 145 10 view .LVU156
+ 479 0040 FF20     		movs	r0, #255
+ 480              	.L31:
+ 146:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 481              		.loc 1 146 1 view .LVU157
+ 482 0042 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 146:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 483              		.loc 1 146 1 view .LVU158
+ 484              		.cfi_endproc
+ 485              	.LFE31:
+ 487              		.section	.rodata.bridgeif_fdb_init.str1.4,"aMS",%progbits,1
+ 488              		.align	2
+ 489              	.LC3:
+ 490 0000 616C6C6F 		.ascii	"alloc_len == alloc_len_sizet\000"
+ 490      635F6C65 
+ 490      6E203D3D 
+ 490      20616C6C 
+ 490      6F635F6C 
+ 491              		.section	.text.bridgeif_fdb_init,"ax",%progbits
+ 492              		.align	1
+ 493              		.global	bridgeif_fdb_init
+ 494              		.syntax unified
+ 495              		.thumb
+ 496              		.thumb_func
+ 497              		.fpu fpv5-sp-d16
+ 499              	bridgeif_fdb_init:
+ 500              	.LVL35:
+ 501              	.LFB34:
+ 189:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 190:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** /**
+ 191:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * @ingroup bridgeif_fdb
+ 192:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  * Init our simple fdb list
+ 193:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****  */
+ 194:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** void *
+ 195:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** bridgeif_fdb_init(u16_t max_fdb_entries)
+ 196:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** {
+ 502              		.loc 1 196 1 is_stmt 1 view -0
+ 503              		.cfi_startproc
+ 504              		@ args = 0, pretend = 0, frame = 0
+ 505              		@ frame_needed = 0, uses_anonymous_args = 0
+ 506              		.loc 1 196 1 is_stmt 0 view .LVU160
+ 507 0000 38B5     		push	{r3, r4, r5, lr}
+ 508              	.LCFI5:
+ 509              		.cfi_def_cfa_offset 16
+ 510              		.cfi_offset 3, -16
+ 511              		.cfi_offset 4, -12
+ 512              		.cfi_offset 5, -8
+ 513              		.cfi_offset 14, -4
+ 514 0002 0446     		mov	r4, r0
+ 197:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   bridgeif_dfdb_t *fdb;
+ 515              		.loc 1 197 3 is_stmt 1 view .LVU161
+ 198:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   size_t alloc_len_sizet = sizeof(bridgeif_dfdb_t) + (max_fdb_entries * sizeof(bridgeif_dfdb_entry_
+ 516              		.loc 1 198 3 view .LVU162
+ 517              		.loc 1 198 71 is_stmt 0 view .LVU163
+ 518 0004 0301     		lsls	r3, r0, #4
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 16
+
+
+ 519              		.loc 1 198 10 view .LVU164
+ 520 0006 0833     		adds	r3, r3, #8
+ 521              	.LVL36:
+ 199:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   mem_size_t alloc_len = (mem_size_t)alloc_len_sizet;
+ 522              		.loc 1 199 3 is_stmt 1 view .LVU165
+ 523              		.loc 1 199 14 is_stmt 0 view .LVU166
+ 524 0008 9DB2     		uxth	r5, r3
+ 525              	.LVL37:
+ 200:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   LWIP_ASSERT("alloc_len == alloc_len_sizet", alloc_len == alloc_len_sizet);
+ 526              		.loc 1 200 3 is_stmt 1 view .LVU167
+ 527              		.loc 1 200 3 view .LVU168
+ 528 000a AB42     		cmp	r3, r5
+ 529 000c 11D1     		bne	.L39
+ 530              	.LVL38:
+ 531              	.L36:
+ 532              		.loc 1 200 3 discriminator 3 view .LVU169
+ 533              		.loc 1 200 3 discriminator 3 view .LVU170
+ 201:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   LWIP_DEBUGF(BRIDGEIF_DEBUG, ("bridgeif_fdb_init: allocating %d bytes for private FDB data\n", (in
+ 534              		.loc 1 201 113 discriminator 3 view .LVU171
+ 202:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   fdb = (bridgeif_dfdb_t *)mem_calloc(1, alloc_len);
+ 535              		.loc 1 202 3 discriminator 3 view .LVU172
+ 536              		.loc 1 202 28 is_stmt 0 discriminator 3 view .LVU173
+ 537 000e 2946     		mov	r1, r5
+ 538 0010 0120     		movs	r0, #1
+ 539 0012 FFF7FEFF 		bl	mem_calloc
+ 540              	.LVL39:
+ 203:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   if (fdb == NULL) {
+ 541              		.loc 1 203 3 is_stmt 1 discriminator 3 view .LVU174
+ 542              		.loc 1 203 6 is_stmt 0 discriminator 3 view .LVU175
+ 543 0016 0546     		mov	r5, r0
+ 544              	.LVL40:
+ 545              		.loc 1 203 6 discriminator 3 view .LVU176
+ 546 0018 48B1     		cbz	r0, .L35
+ 204:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****     return NULL;
+ 205:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   }
+ 206:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   fdb->max_fdb_entries = max_fdb_entries;
+ 547              		.loc 1 206 3 is_stmt 1 view .LVU177
+ 548              		.loc 1 206 24 is_stmt 0 view .LVU178
+ 549 001a 0346     		mov	r3, r0
+ 550 001c 23F8084B 		strh	r4, [r3], #8	@ movhi
+ 207:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   fdb->fdb = (bridgeif_dfdb_entry_t *)(fdb + 1);
+ 551              		.loc 1 207 3 is_stmt 1 view .LVU179
+ 552              		.loc 1 207 12 is_stmt 0 view .LVU180
+ 553 0020 4360     		str	r3, [r0, #4]
+ 208:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 209:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   sys_timeout(BRIDGEIF_AGE_TIMER_MS, bridgeif_age_tmr, fdb);
+ 554              		.loc 1 209 3 is_stmt 1 view .LVU181
+ 555 0022 0246     		mov	r2, r0
+ 556 0024 0649     		ldr	r1, .L40
+ 557 0026 4FF47A70 		mov	r0, #1000
+ 558              	.LVL41:
+ 559              		.loc 1 209 3 is_stmt 0 view .LVU182
+ 560 002a FFF7FEFF 		bl	sys_timeout
+ 561              	.LVL42:
+ 210:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** 
+ 211:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   return fdb;
+ 562              		.loc 1 211 3 is_stmt 1 view .LVU183
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 17
+
+
+ 563              	.L35:
+ 212:./Middlewares/LwIP/src/netif/bridgeif_fdb.c **** }
+ 564              		.loc 1 212 1 is_stmt 0 view .LVU184
+ 565 002e 2846     		mov	r0, r5
+ 566 0030 38BD     		pop	{r3, r4, r5, pc}
+ 567              	.LVL43:
+ 568              	.L39:
+ 200:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   LWIP_DEBUGF(BRIDGEIF_DEBUG, ("bridgeif_fdb_init: allocating %d bytes for private FDB data\n", (in
+ 569              		.loc 1 200 3 is_stmt 1 discriminator 1 view .LVU185
+ 200:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   LWIP_DEBUGF(BRIDGEIF_DEBUG, ("bridgeif_fdb_init: allocating %d bytes for private FDB data\n", (in
+ 570              		.loc 1 200 3 discriminator 1 view .LVU186
+ 571 0032 044B     		ldr	r3, .L40+4
+ 572              	.LVL44:
+ 200:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   LWIP_DEBUGF(BRIDGEIF_DEBUG, ("bridgeif_fdb_init: allocating %d bytes for private FDB data\n", (in
+ 573              		.loc 1 200 3 is_stmt 0 discriminator 1 view .LVU187
+ 574 0034 C822     		movs	r2, #200
+ 575 0036 0449     		ldr	r1, .L40+8
+ 576 0038 0448     		ldr	r0, .L40+12
+ 577              	.LVL45:
+ 200:./Middlewares/LwIP/src/netif/bridgeif_fdb.c ****   LWIP_DEBUGF(BRIDGEIF_DEBUG, ("bridgeif_fdb_init: allocating %d bytes for private FDB data\n", (in
+ 578              		.loc 1 200 3 discriminator 1 view .LVU188
+ 579 003a FFF7FEFF 		bl	printf
+ 580              	.LVL46:
+ 581 003e E6E7     		b	.L36
+ 582              	.L41:
+ 583              		.align	2
+ 584              	.L40:
+ 585 0040 00000000 		.word	bridgeif_age_tmr
+ 586 0044 00000000 		.word	.LC0
+ 587 0048 00000000 		.word	.LC3
+ 588 004c 38000000 		.word	.LC2
+ 589              		.cfi_endproc
+ 590              	.LFE34:
+ 592              		.text
+ 593              	.Letext0:
+ 594              		.file 2 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/lib/gcc/arm-none-eabi/9.2.1/inclu
+ 595              		.file 3 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/machine/_de
+ 596              		.file 4 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/sys/lock.h"
+ 597              		.file 5 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/sys/_types.
+ 598              		.file 6 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/sys/reent.h
+ 599              		.file 7 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/stdlib.h"
+ 600              		.file 8 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/sys/_stdint
+ 601              		.file 9 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/time.h"
+ 602              		.file 10 "Middlewares/LwIP/src/include/lwip/arch.h"
+ 603              		.file 11 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/ctype.h"
+ 604              		.file 12 "Middlewares/LwIP/src/include/lwip/err.h"
+ 605              		.file 13 "Middlewares/LwIP/src/include/lwip/prot/ethernet.h"
+ 606              		.file 14 "Middlewares/LwIP/src/include/netif/bridgeif.h"
+ 607              		.file 15 "Inc/FreeRTOSConfig.h"
+ 608              		.file 16 "Middlewares/FreeRTOS/Source/include/queue.h"
+ 609              		.file 17 "Middlewares/FreeRTOS/Source/include/semphr.h"
+ 610              		.file 18 "Middlewares/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h"
+ 611              		.file 19 "Middlewares/LwIP/system/arch/sys_arch.h"
+ 612              		.file 20 "Middlewares/LwIP/src/include/lwip/timeouts.h"
+ 613              		.file 21 "Middlewares/LwIP/src/include/lwip/ip4_addr.h"
+ 614              		.file 22 "Middlewares/LwIP/src/include/lwip/ip_addr.h"
+ 615              		.file 23 "Middlewares/LwIP/src/include/lwip/pbuf.h"
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 18
+
+
+ 616              		.file 24 "Middlewares/LwIP/src/include/lwip/mem.h"
+ 617              		.file 25 "Middlewares/LwIP/src/include/lwip/priv/memp_priv.h"
+ 618              		.file 26 "Middlewares/LwIP/src/include/lwip/memp.h"
+ 619              		.file 27 "Middlewares/LwIP/src/include/lwip/netif.h"
+ 620              		.file 28 "Middlewares/LwIP/src/include/lwip/tcpip.h"
+ 621              		.file 29 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/stdio.h"
+ 622              		.file 30 "/usr/local/Cellar/arm-none-eabi-gcc/9-2019-q4-major/gcc/arm-none-eabi/include/string.h"
+ARM GAS  /var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s 			page 19
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 bridgeif_fdb.c
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:18     .text.bridgeif_fdb_age_one_second:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:25     .text.bridgeif_fdb_age_one_second:0000000000000000 bridgeif_fdb_age_one_second
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:125    .rodata.bridgeif_age_tmr.str1.4:0000000000000000 $d
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:135    .text.bridgeif_age_tmr:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:141    .text.bridgeif_age_tmr:0000000000000000 bridgeif_age_tmr
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:192    .text.bridgeif_age_tmr:0000000000000028 $d
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:200    .text.bridgeif_fdb_update_src:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:207    .text.bridgeif_fdb_update_src:0000000000000000 bridgeif_fdb_update_src
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:380    .text.bridgeif_fdb_get_dst_ports:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:387    .text.bridgeif_fdb_get_dst_ports:0000000000000000 bridgeif_fdb_get_dst_ports
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:488    .rodata.bridgeif_fdb_init.str1.4:0000000000000000 $d
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:492    .text.bridgeif_fdb_init:0000000000000000 $t
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:499    .text.bridgeif_fdb_init:0000000000000000 bridgeif_fdb_init
+/var/folders/yz/w8msd8211qzc60m57tpkzbn80000gn/T//ccyYC6YT.s:585    .text.bridgeif_fdb_init:0000000000000040 $d
+
+UNDEFINED SYMBOLS
+sys_timeout
+printf
+memcmp
+mem_calloc
