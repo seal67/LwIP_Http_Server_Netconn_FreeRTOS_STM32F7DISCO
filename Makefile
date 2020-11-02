@@ -312,20 +312,22 @@ OUTPUT_PRINT = "\033[0;32mOutput $< -> $@\033[0m"
 BUILD_DIR_PRINT = "\033[0;32mMaking Build Directory ($@)\033[0m"
 
 # list of C program objects
-OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+OBJECTS = $(addprefix $(BUILD_DIR)/Src/,$(C_SOURCES:.c=.o))
 vpath %.c $(sort $(dir $(C_SOURCES)))
 # list of ASM program objects
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/Src/,$(ASM_SOURCES:.s=.o))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 all: $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).hex
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/Src/%.o: %.c Makefile | $(BUILD_DIR)
 	@echo $(BUILD_PRINT)
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/Src/$(<:.c=.lst) $< -o $@
 
-$(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/Src/%.o: %.s Makefile | $(BUILD_DIR) 
 	@echo $(BUILD_PRINT)
+	mkdir -p $(dir $@)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
@@ -343,7 +345,7 @@ $(BUILD_DIR)/$(TARGET).bin: $(BUILD_DIR)/$(TARGET).elf | $(BUILD_DIR)
 	
 $(BUILD_DIR):
 	@echo $(BUILD_PRINT)
-	mkdir $@		
+	mkdir -p $@/Src	
 
 #######################################
 # clean up
